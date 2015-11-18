@@ -1,4 +1,4 @@
-= NMEA2000 library for Arduino =
+= NMEA0183 library for Arduino =
 
 # NMEA0183
 NMEA0183 library for Arduino
