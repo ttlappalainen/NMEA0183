@@ -1,0 +1,35 @@
+= NMEA2000 library for Arduino =
+
+# NMEA0183
+NMEA0183 library for Arduino
+
+Object oriented NMEA0183 library for Arduino Boards
+
+Library gives you a e.g. easy way to make NMEA0183->NMEA2000 interface like Actisense device.
+
+Currently there are only few functions for parsing NMEA0183 messages. There are no
+functions for sending or creating NMEA0183 messages, since the the original need for the
+library was to parse message for forwarding them to the NMEA2000 bus.
+
+See also NMEA2000 library
+
+== License ==
+
+2015 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+
+Author: Timo Lappalainen
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-
+  1301  USA
