@@ -42,7 +42,6 @@ tNMEA0183 NMEA0183_3;
 void setup() {
 
   // Setup NMEA2000 system
-  SerialUSB.begin(115200);
   Serial.begin(115200);
   NMEA2000.SetProductInformation("00000008", // Manufacturer's Model serial code
                                  107, // Manufacturer's product code

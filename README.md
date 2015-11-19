@@ -9,4 +9,7 @@ Currently there are only few functions for parsing NMEA0183 messages. There are 
 functions for sending or creating NMEA0183 messages, since the the original need for the
 library was to parse message for forwarding them to the NMEA2000 bus.
 
-See also NMEA2000 library
+To use this library you also need latest version of Arduino Time library http://playground.arduino.cc/code/time
+
+To compile example NMEA0183ToN2k you need also NMEA2000 library https://github.com/ttlappalainen/NMEA2000
+

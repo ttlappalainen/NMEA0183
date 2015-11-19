@@ -23,8 +23,7 @@ Author: Timo Lappalainen
 
 #ifndef _tNMEA0183_MESSAGES_H_
 #define _tNMEA0183_MESSAGES_H_
-#include <Arduino.h>
-#include <Time.h>
+#include <TimeLib.h>
 #include <NMEA0183Msg.h>
 
 bool NMEA0183ParseGGA_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
