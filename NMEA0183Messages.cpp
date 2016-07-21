@@ -179,3 +179,36 @@ bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   return result;
 }
 
+//*****************************************************************************
+// !AIVDM,1,1,,B,177KQJ5000G?tO`K>RA1wUbN0TKH,0*5C
+// PkgCnt (1)
+// PkgNmb (1)
+// SeqMessageId (empty)
+// Radio Channel Code (B): A/B or 1/2
+// Payload - 6bit encoded
+// Fillbits (0)
+bool NMEA0183ParseVDM_nc(const tNMEA0183Msg &NMEA0183Msg, 
+			uint8_t &pkgCnt, uint8_t &pkgNmb,
+			unsigned int &seqMessageId, char &channel,
+			unsigned int &length, char *bitstream,
+			unsigned int &fillBits)
+{
+  bool result=( NMEA0183Msg.FieldCount()>=6);
+
+  if ( result ) {
+    unsigned int payloadLen = NMEA0183Msg.FieldLen(4);
+    if ( payloadLen > length)
+      return false;
+    length = payloadLen;
+    memcpy(bitstream, NMEA0183Msg.Field(4), length);
+    fillBits=atoi(NMEA0183Msg.Field(5));
+    seqMessageId=atoi(NMEA0183Msg.Field(2));
+    pkgNmb=atoi(NMEA0183Msg.Field(1));
+    pkgCnt=atoi(NMEA0183Msg.Field(0));
+    channel = *NMEA0183Msg.Field(3);
+    if (channel == '1') channel = 'A';
+    if (channel == '2') channel = 'B';
+  }
+
+  return result;
+}

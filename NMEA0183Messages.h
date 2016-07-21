@@ -69,4 +69,21 @@ inline bool NMEA0183ParseHDT(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeadin
             :false);
 }
 
+
+// VDM is basically a bitstream
+bool NMEA0183ParseVDM_nc(const tNMEA0183Msg &NMEA0183Msg,
+			uint8_t &pkgCnt, uint8_t &pkgNmb,
+			unsigned int &seqMessageId, char &channel,
+			unsigned int &length, char *bitstream,
+			unsigned int &fillBits);
+
+
+inline bool NMEA0183ParseVDM(const tNMEA0183Msg &NMEA0183Msg, uint8_t &pkgCnt, uint8_t &pkgNmb,
+						unsigned int &seqMessageId, char &channel,
+						unsigned int &length, char* bitstream, unsigned int &fillBits) {
+  return (NMEA0183Msg.IsMessageCode("VDM") ?
+		NMEA0183ParseVDM_nc(NMEA0183Msg, pkgCnt, pkgNmb, seqMessageId, channel, length, bitstream, fillBits) : false);
+}
+
+
 #endif
