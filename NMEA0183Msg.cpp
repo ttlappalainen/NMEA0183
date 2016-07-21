@@ -123,3 +123,12 @@ const char *tNMEA0183Msg::Field(uint8_t index) const {
     return Data;
   }
 }
+
+//*****************************************************************************
+unsigned int tNMEA0183Msg::FieldLen(uint8_t index) const {
+  if (index<FieldCount()) {
+    return strlen(Data+Fields[index]);
+  } else {
+    return 0;
+  }
+}
