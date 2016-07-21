@@ -27,6 +27,25 @@ const double pi=3.1415926535897932384626433832795;
 const double kmhToms=1000.0/3600.0; 
 const double knToms=1852.0/3600.0; 
 const double degToRad=pi/180.0; 
+//*****************************************************************************
+void NMEA0183AddChecksum(char* msg) {
+  unsigned int i=1; // First character not included in checksum
+  uint8_t chkSum = 0;
+  char ascChkSum[4];
+  uint8_t tmp;
+
+  while (msg[i] != '\0') {
+    chkSum ^= msg[i];
+    i++;
+  }
+  ascChkSum[0] ='*';
+  tmp = chkSum/16;
+  ascChkSum[1] = tmp > 9 ? 'A' + tmp-10 : '0' + tmp;
+  tmp = chkSum%16;
+  ascChkSum[2] = tmp > 9 ? 'A' + tmp-10 : '0' + tmp;
+  ascChkSum[3] = '\0';
+  strcat(msg, ascChkSum);
+}
 
 //*****************************************************************************
 double LatLonToDouble(const char *data, const char sign) {
