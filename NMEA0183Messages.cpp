@@ -27,6 +27,9 @@ const double pi=3.1415926535897932384626433832795;
 const double kmhToms=1000.0/3600.0; 
 const double knToms=1852.0/3600.0; 
 const double degToRad=pi/180.0; 
+const double msTokmh=3600.0/1000.0;
+const double msTokn=3600.0/1852.0;
+
 //*****************************************************************************
 void NMEA0183AddChecksum(char* msg) {
   unsigned int i=1; // First character not included in checksum
@@ -151,7 +154,7 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
   return result;
 }
 //*****************************************************************************
-// $GPVTG,89.34,T,81.84,M,0.00,N,0.01,K,D*24
+// $GPVTG,89.34,T,81.84,M,0.00,N,0.01,K*24
 bool NMEA0183ParseVTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, double &MagneticCOG, double &SOG) {
   bool result=( NMEA0183Msg.FieldCount()>=8 );
   
@@ -185,6 +188,38 @@ int sprintfDouble2(char* msg, double val)
   }
 }
 
+//*****************************************************************************
+bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double MagneticCOG, double SOG)
+{
+  char scratch[20];
+
+  msg[0] = '$';
+  msg[1] = Src[0];
+  msg[2] = Src[1];
+  strcpy(&msg[3],"VTG,");
+  TrueCOG /= degToRad;
+  if (TrueCOG < 360) {
+    sprintfDouble2(scratch, TrueCOG);
+    strcat(msg,scratch);
+  }
+  strcat(msg,",T,");
+  MagneticCOG /= degToRad;
+  if (MagneticCOG < 360) {
+	sprintfDouble2(scratch, MagneticCOG);
+    strcat(msg,scratch);
+  }
+  strcat(msg,",M,");
+  if (SOG >= 0.00) {
+     sprintfDouble2(scratch, SOG*msTokn);
+     strcat(msg, scratch);
+     strcat(msg,",N,,K");
+  } else {
+     strcat(msg, ",N,,K,");
+  }
+
+  NMEA0183AddChecksum(msg);
+  return true;
+}
 
 //*****************************************************************************
 // $HEHDT,244.71,T*1B
