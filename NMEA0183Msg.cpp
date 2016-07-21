@@ -37,7 +37,7 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
   Clear();
   _MessageTime=millis();
   
-  if (buf[i]!='$') return result; // Invalid message
+  if (buf[i]!='$' && buf[i]!='!') return result; // Invalid message
   Prefix=buf[i];
   i++; // Pass start prefix
   
@@ -59,6 +59,7 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
   if (buf[i]!=',') { Clear(); return result; } // No separation after message code -> invalid message
   
   // Set the data and calculate checksum. Read until '*'
+  // NB! First write is coma following message code
   for (; buf[i]!='*' && buf[i]!=0 && iData<MAX_NMEA0183_MSG_LEN; i++, iData++) {
     CheckSum^=buf[i];
     Data[iData]=buf[i];
