@@ -50,7 +50,6 @@ bool tNMEA0183::GetMessage(tNMEA0183Msg &NMEA0183Msg) {
 
   while (port->available() > 0 && !result) {
     int NewByte=port->read();
-//        Serial.println((char)NewByte);
       if (NewByte=='$' || NewByte=='!') { // Message start
         MsgInStarted=true;
         MsgInPos=0;
@@ -63,7 +62,6 @@ bool tNMEA0183::GetMessage(tNMEA0183Msg &NMEA0183Msg) {
         if (MsgCheckSumStartPos>0 and MsgCheckSumStartPos+3==MsgInPos) { // We have full checksum and so full message
             MsgInBuf[MsgInPos]=0; // add null termination
           if (NMEA0183Msg.SetMessage(MsgInBuf)) {
-//        Serial.println(MsgBuf);
             NMEA0183Msg.SourceID=SourceID;
             result=true;
           }
