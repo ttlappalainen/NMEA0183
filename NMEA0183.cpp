@@ -23,11 +23,9 @@ Author: Timo Lappalainen
 
 #include <NMEA0183.h>
 
-tNMEA0183::tNMEA0183() {
-    MsgWritePos=0;
-    MsgCheckSumStartPos=-1;
-    MsgStarted=false;
-    MsgHandler=0;
+tNMEA0183::tNMEA0183()
+: MsgCheckSumStartPos(-1), MsgInStarted(false), MsgInPos(0), 
+  MsgHandler(0), SourceId(0),port(0) {
 }
 
 //*****************************************************************************
@@ -54,28 +52,28 @@ bool tNMEA0183::GetMessage(tNMEA0183Msg &NMEA0183Msg) {
     int NewByte=port->read();
 //        Serial.println((char)NewByte);
       if (NewByte=='$' || NewByte=='!') { // Message start
-        MsgStarted=true;
-        MsgWritePos=0;
-        MsgBuf[MsgWritePos]=NewByte;
-        MsgWritePos++;
-      } else if (MsgStarted) {
-        MsgBuf[MsgWritePos]=NewByte;
-        if (NewByte=='*') MsgCheckSumStartPos=MsgWritePos;
-        MsgWritePos++;
-        if (MsgCheckSumStartPos>0 and MsgCheckSumStartPos+3==MsgWritePos) { // We have full checksum and so full message
-            MsgBuf[MsgWritePos]=0; // add null termination
+        MsgInStarted=true;
+        MsgInPos=0;
+        MsgInBuf[MsgInPos]=NewByte;
+        MsgInPos++;
+      } else if (MsgInStarted) {
+        MsgInBuf[MsgInPos]=NewByte;
+        if (NewByte=='*') MsgCheckSumStartPos=MsgInPos;
+        MsgInPos++;
+        if (MsgCheckSumStartPos>0 and MsgCheckSumStartPos+3==MsgInPos) { // We have full checksum and so full message
+            MsgInBuf[MsgInPos]=0; // add null termination
+          if (NMEA0183Msg.SetMessage(MsgInBuf)) {
 //        Serial.println(MsgBuf);
-          if (NMEA0183Msg.SetMessage(MsgBuf)) {
             NMEA0183Msg.SourceID=SourceID;
             result=true;
           }
-          MsgStarted=false;
-          MsgWritePos=0;
+          MsgInStarted=false;
+          MsgInPos=0;
           MsgCheckSumStartPos=-1;  
         }
-        if (MsgWritePos>=MAX_NMEA0183_MSG_BUF_LEN) { // Too may chars in message. Start from beginning
-          MsgStarted=false;
-          MsgWritePos=0;
+        if (MsgInPos>=MAX_NMEA0183_MSG_BUF_LEN) { // Too may chars in message. Start from beginning
+          MsgInStarted=false;
+          MsgInPos=0;
           MsgCheckSumStartPos=-1;  
         }
       }

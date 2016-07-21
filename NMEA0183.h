@@ -32,10 +32,10 @@ class tNMEA0183
 {
   protected:
     HardwareSerial *port;
-    char MsgBuf[MAX_NMEA0183_MSG_BUF_LEN];
-    int MsgWritePos;
     int MsgCheckSumStartPos;
-    bool MsgStarted;
+    char MsgInBuf[MAX_NMEA0183_MSG_BUF_LEN];
+    int MsgInPos;
+    bool MsgInStarted;
     uint8_t SourceID;  // User defined ID for this message handler
 
     // Handler callback
