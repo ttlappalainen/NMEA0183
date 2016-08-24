@@ -27,6 +27,28 @@ const double pi=3.1415926535897932384626433832795;
 const double kmhToms=1000.0/3600.0; 
 const double knToms=1852.0/3600.0; 
 const double degToRad=pi/180.0; 
+const double msTokmh=3600.0/1000.0;
+const double msTokn=3600.0/1852.0;
+
+//*****************************************************************************
+void NMEA0183AddChecksum(char* msg) {
+  unsigned int i=1; // First character not included in checksum
+  uint8_t chkSum = 0;
+  char ascChkSum[4];
+  uint8_t tmp;
+
+  while (msg[i] != '\0') {
+    chkSum ^= msg[i];
+    i++;
+  }
+  ascChkSum[0] ='*';
+  tmp = chkSum/16;
+  ascChkSum[1] = tmp > 9 ? 'A' + tmp-10 : '0' + tmp;
+  tmp = chkSum%16;
+  ascChkSum[2] = tmp > 9 ? 'A' + tmp-10 : '0' + tmp;
+  ascChkSum[3] = '\0';
+  strcat(msg, ascChkSum);
+}
 
 //*****************************************************************************
 double LatLonToDouble(const char *data, const char sign) {
@@ -130,7 +152,7 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
   }
 }
 //*****************************************************************************
-// $GPVTG,89.34,T,81.84,M,0.00,N,0.01,K,D*24
+// $GPVTG,89.34,T,81.84,M,0.00,N,0.01,K*24
 bool NMEA0183ParseVTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, double &MagneticCOG, double &SOG) {
   bool result=( NMEA0183Msg.FieldCount()>=8 );
   
@@ -146,6 +168,36 @@ bool NMEA0183ParseVTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, doubl
 }
 
 //*****************************************************************************
+bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double MagneticCOG, double SOG)
+{
+  char scratch[20];
+
+  msg[0] = '$';
+  msg[1] = Src[0];
+  msg[2] = Src[1];
+  strcpy(&msg[3],"VTG,");
+  if (TrueCOG < 360) {
+    sprintf(scratch, "%.2f", TrueCOG);
+    strcat(msg,scratch);
+  }
+  strcat(msg,",T,");
+  if (MagneticCOG < 360) {
+    sprintf(scratch, "%.2f", MagneticCOG);
+    strcat(msg,scratch);
+  }
+  strcat(msg,",M,");
+  if (SOG >= 0.00) {
+     sprintf(scratch, "%.2f,N,%.2f,K,", SOG*msTokn, SOG*msTokmh);
+     strcat(msg, scratch);
+  } else {
+     strcat(msg, ",N,,K,");
+  }
+
+  NMEA0183AddChecksum(char* msg);
+  return true;
+}
+
+//*****************************************************************************
 // $HEHDT,244.71,T*1B
 bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   bool result=( NMEA0183Msg.FieldCount()>=2 );
@@ -154,3 +206,31 @@ bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   }
 }
 
+//*****************************************************************************
+// !AIVDM,1,1,,B,177KQJ5000G?tO`K>RA1wUbN0TKH,0*5C
+// PkgCnt (1)
+// PkgNmb (1)
+// SeqMessageId (empty)
+// Radio Channel Code (B): A/B or 1/2
+// Payload - 6bit encoded
+// Fillbits (0)
+bool NMEA0183ParseVDM_nc(const tNMEA0183Msg &NMEA0183Msg, 
+			unsigned int &pkgToGo, unsigned int &seqMessageId,
+			unsigned int &lenght, char *bitstream,
+			unsgined int &fillBits)
+{
+  bool result=( NMEA0183Msg.FieldCount()>=6);
+
+  if ( result ) {
+    unsigned int payloadLen = NMEA0183Msg.FieldLen(4);
+    if ( payloadLen > length)
+      return false;
+    length = payloadLen;
+    memcpy(bitstream, NMEA0183Msg.Field(4), length);
+    fillbits=atoi(NMEA0183Msg.Field(5));
+    seqMessageId=atoi(NMEA0183Msg.Fields(2);
+    pkgToGo=atoi(NMEA0183Msg.Fields(1);
+  }
+
+  return result;
+}

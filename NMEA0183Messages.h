@@ -59,6 +59,8 @@ inline bool NMEA0183ParseVTG(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, d
             :false);
 }
 
+bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double MagneticCOG, double SOG);
+
 // Heading will be returned be in radians
 bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading); 
 
@@ -67,5 +69,15 @@ inline bool NMEA0183ParseHDT(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeadin
             ?NMEA0183ParseHDT_nc(NMEA0183Msg,TrueHeading)
             :false);
 }
+
+
+// VDM is basically a bitstream
+bool NMEA0183ParseVDM_nc(const tNMEA0183Msg &NMEA0183Msg, unsigned int &lenght, char *bitstream);
+
+inline bool NMEA0183ParseVDM(const tNMEA0183Msg &NMEA0183Msg, unsigned int &length, char* bitstream) {
+  return (NMEA0183Msg.IsMessageCode("HDT") ?
+		NMEA0183ParseVDM_nc(NMEA0183Msg, length, bitstream) : false);
+}
+
 
 #endif
