@@ -1,7 +1,7 @@
 /* 
 NMEA0183.cpp
 
-2015 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+2015-2016 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
 
 Author: Timo Lappalainen
 
@@ -23,13 +23,11 @@ Author: Timo Lappalainen
 
 #include <NMEA0183.h>
 
-tNMEA0183::tNMEA0183()
-: MsgCheckSumStartPos(-1), MsgInStarted(false), MsgInPos(0), 
-  MsgOutPos(0), MsgOutStarted(false),MsgOutIdx(0)
-  MsgHandler(0), SourceId(0),port(0) {
-  for(int i=0; i < MAX_OUT_BUF;i++) {
-    MsgOutBuf[i][0]='\0';
-  }
+tNMEA0183::tNMEA0183() {
+    MsgWritePos=0;
+    MsgCheckSumStartPos=-1;
+    MsgStarted=false;
+    MsgHandler=0;
 }
 
 //*****************************************************************************
@@ -54,28 +52,30 @@ bool tNMEA0183::GetMessage(tNMEA0183Msg &NMEA0183Msg) {
 
   while (port->available() > 0 && !result) {
     int NewByte=port->read();
+//        Serial.println((char)NewByte);
       if (NewByte=='$' || NewByte=='!') { // Message start
-        MsgInStarted=true;
-        MsgInPos=0;
-        MsgInBuf[MsgInPos]=NewByte;
-        MsgInPos++;
-      } else if (MsgInStarted) {
-        MsgInBuf[MsgInPos]=NewByte;
-        if (NewByte=='*') MsgCheckSumStartPos=MsgInPos;
-        MsgInPos++;
-        if (MsgCheckSumStartPos>0 and MsgCheckSumStartPos+3==MsgInPos) { // We have full checksum and so full message
-            MsgInBuf[MsgInPos]=0; // add null termination
-          if (NMEA0183Msg.SetMessage(MsgInBuf)) {
+        MsgStarted=true;
+        MsgWritePos=0;
+        MsgBuf[MsgWritePos]=NewByte;
+        MsgWritePos++;
+      } else if (MsgStarted) {
+        MsgBuf[MsgWritePos]=NewByte;
+        if (NewByte=='*') MsgCheckSumStartPos=MsgWritePos;
+        MsgWritePos++;
+        if (MsgCheckSumStartPos>0 and MsgCheckSumStartPos+3==MsgWritePos) { // We have full checksum and so full message
+            MsgBuf[MsgWritePos]=0; // add null termination
+//        Serial.println(MsgBuf);
+          if (NMEA0183Msg.SetMessage(MsgBuf)) {
             NMEA0183Msg.SourceID=SourceID;
             result=true;
           }
-          MsgInStarted=false;
-          MsgInPos=0;
+          MsgStarted=false;
+          MsgWritePos=0;
           MsgCheckSumStartPos=-1;  
         }
-        if (MsgInPos>=MAX_NMEA0183_MSG_BUF_LEN) { // Too may chars in message. Start from beginning
-          MsgInStarted=false;
-          MsgInPos=0;
+        if (MsgWritePos>=MAX_NMEA0183_MSG_BUF_LEN) { // Too may chars in message. Start from beginning
+          MsgStarted=false;
+          MsgWritePos=0;
           MsgCheckSumStartPos=-1;  
         }
       }
@@ -83,60 +83,4 @@ bool tNMEA0183::GetMessage(tNMEA0183Msg &NMEA0183Msg) {
   
   return result;
 }
-
-//*****************************************************************************
-int tNMEA0183::nextOutIdx(int idx)
-{
-  idx++;
-  if (idxc >= MAX_OUT_BUF) {
-    idx = 0;
-  }
-  return idx;
-}
-
-//*****************************************************************************
-void tNMEA0183::kick() {
-  if (MsgOutBuf[MsgOutIdx][0] != '\0') {
-    MsgOutStarted = true;
-    while(port->availableForWrite() > 0) {
-      port->write(MsgOut[MsgOutIdx][MsgOutPos]);
-      MsgOutPos++;
-      if (MsgOutBuf[MsgOutIdx][MsgOutPos] == '\0') {
-        // Done with this message - clear it and prepare for next
-        MsgOutBuf[MsgOutIdx][0] = '\0';
-	MsgOutIdx = nextOutIdx(MsgOutIdx);
-        MsgOutPos=0;
-        if (MsgOutBuf[MsgOutIdx][0] == '\0') {
-          MsgOutStarted=false;
-        }
-        return;
-      }
-    }
-  }
-}
-
-//*****************************************************************************
-bool tNMEA0183::SendMessage(const unsigned char *buf) {
-
-  if(stren(buf) >= MAX_NMEA0183_MSG_BUF_LEN)
-    return false;
-
-  bool result=true;
-  int bufIdx = MsgOutIdx;
-  if(MsgOutStarted) {
-    result=false;
-    do {
-      bufIdx = nextOutIdx(bufIdx);
-      if (MsgOutBuf[bufIdx][0] != '\0') {
-        result=true; // Yep it is free
-      }
-    } while ((result==false) && (bufIdx != MsgOutIdx) );
-  }
-  if (result==true) {
-    strcpy(&MsgOutBuf[bufIdx][0],buf);
-    kick();
-  }
-  return result;
-}
-
 

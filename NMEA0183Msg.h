@@ -1,7 +1,7 @@
 /* 
 NMEA0183Msg.h
 
-2015 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+2015-2016 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
 
 Author: Timo Lappalainen
 
@@ -61,8 +61,6 @@ class tNMEA0183Msg
     bool IsMessageCode(const char* _code) const { return (strcmp(MessageCode(),_code)==0); }
     //
     unsigned long MessageTime() const { return _MessageTime; }
-    // Return length of field
-    unsigned int FieldLen(uint8_t index) const;
 };
 
 #endif

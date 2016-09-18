@@ -1,7 +1,7 @@
 /* 
 NMEA0183.h
 
-2015 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+2015-2016 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
 
 Author: Timo Lappalainen
 
@@ -27,34 +27,27 @@ Author: Timo Lappalainen
 #include <NMEA0183Msg.h>
 
 #define MAX_NMEA0183_MSG_BUF_LEN 81  // Accroding to NMEA 3.01. Can not contain multi message as in AIS
-#define MAX_OUT_BUF 3
 
 class tNMEA0183
 {
   protected:
     HardwareSerial *port;
+    char MsgBuf[MAX_NMEA0183_MSG_BUF_LEN];
+    int MsgWritePos;
     int MsgCheckSumStartPos;
-    char MsgInBuf[MAX_NMEA0183_MSG_BUF_LEN];
-    char MsgOutBuf[MAX_OUT_BUF][MAX_NMEA0183_MSG_BUF_LEN];
-    int MsgOutIdx;
-    int MsgInPos;
-    int MsgOutPos;
-    bool MsgInStarted;
-    bool MsgOutStarted;
+    bool MsgStarted;
     uint8_t SourceID;  // User defined ID for this message handler
 
     // Handler callback
     void (*MsgHandler)(const tNMEA0183Msg &NMEA0183Msg);
-    int nextOutIdx(int idx);
-
+    
   public:
     tNMEA0183();
     void Begin(HardwareSerial *_port, uint8_t _SourceID=0, unsigned long _baud=4800);
     void SetMsgHandler(void (*_MsgHandler)(const tNMEA0183Msg &NMEA0183Msg)) {MsgHandler=_MsgHandler;}
     void ParseMessages();
+
     bool GetMessage(tNMEA0183Msg &NMEA0183Msg);
 };
-    bool SendMessage(const unsigned char *buf);
-    void kick();
 
 #endif
