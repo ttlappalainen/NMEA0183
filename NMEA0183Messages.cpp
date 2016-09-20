@@ -116,7 +116,7 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
   
   if ( result ) {
     time_t lDT;
-    tmElements_t TimeElements;
+
     GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
     Latitude=LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
     Longitude=LatLonToDouble(NMEA0183Msg.Field(4),NMEA0183Msg.Field(5)[0]);
@@ -128,6 +128,8 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
     if (DateTime!=0) *DateTime=lDT;
     Variation=atof(NMEA0183Msg.Field(9))*degToRad; if (NMEA0183Msg.Field(10)[0]=='W') Variation=-Variation;
   }
+
+  return result;
 }
 //*****************************************************************************
 // $GPVTG,89.34,T,81.84,M,0.00,N,0.01,K,D*24
@@ -143,6 +145,8 @@ bool NMEA0183ParseVTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, doubl
       SOG=atof(NMEA0183Msg.Field(4))*knToms;
     }
   }
+
+  return result;
 }
 
 //*****************************************************************************
@@ -152,5 +156,7 @@ bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   if ( result ) {
     TrueHeading=atof(NMEA0183Msg.Field(0))*degToRad;
   }
+
+  return result;
 }
 
