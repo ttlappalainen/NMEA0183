@@ -98,8 +98,8 @@ void tNMEA0183Msg::Clear() {
 }
 
 //*****************************************************************************
-void tNMEA0183Msg::PrintFields(Stream &port) const {
-}
+//void tNMEA0183Msg::PrintFields(Stream &port) const {
+//}
 
 //*****************************************************************************
 void tNMEA0183Msg::Send(Stream &port) const {
