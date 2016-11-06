@@ -169,6 +169,24 @@ bool NMEA0183ParseVTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, doubl
 }
 
 //*****************************************************************************
+// Helper to avoid enabling floating point support
+int sprintfDouble2(char* msg, double val)
+{
+  int valInt = val;
+  int valFrag;
+
+  val -= valInt;
+  valFrag = val * 100;
+
+  if (valFrag < 10) {
+	  return sprintf(msg,"%d.0%d",valInt, valFrag);
+  } else {
+	  return sprintf(msg,"%d,%d", valInt, valFrag);
+  }
+}
+
+
+//*****************************************************************************
 // $HEHDT,244.71,T*1B
 bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   bool result=( NMEA0183Msg.FieldCount()>=2 );
