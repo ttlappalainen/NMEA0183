@@ -24,8 +24,14 @@ Author: Timo Lappalainen
 #include <NMEA0183.h>
 
 tNMEA0183::tNMEA0183()
-: MsgCheckSumStartPos(-1), MsgInStarted(false), MsgInPos(0), 
-  MsgHandler(0), SourceId(0),port(0) {
+: port(0), MsgCheckSumStartPos(-1), MsgOutIdx(0),
+  MsgInPos(0), MsgOutPos(0),
+  MsgInStarted(false), MsgOutStarted(false),
+  SourceID(0), MsgHandler(0)
+{
+  for(int i=0; i < MAX_OUT_BUF;i++) {
+    MsgOutBuf[i][0]='\0';
+  }
 }
 
 //*****************************************************************************
@@ -79,4 +85,60 @@ bool tNMEA0183::GetMessage(tNMEA0183Msg &NMEA0183Msg) {
   
   return result;
 }
+
+//*****************************************************************************
+int tNMEA0183::nextOutIdx(int idx)
+{
+  idx++;
+  if (idx >= MAX_OUT_BUF) {
+    idx = 0;
+  }
+  return idx;
+}
+
+//*****************************************************************************
+void tNMEA0183::kick() {
+  if (MsgOutBuf[MsgOutIdx][0] != '\0') {
+    MsgOutStarted = true;
+    while(port->availableForWrite() > 0) {
+      port->write(MsgOutBuf[MsgOutIdx][MsgOutPos]);
+      MsgOutPos++;
+      if (MsgOutBuf[MsgOutIdx][MsgOutPos] == '\0') {
+        // Done with this message - clear it and prepare for next
+        MsgOutBuf[MsgOutIdx][0] = '\0';
+	MsgOutIdx = nextOutIdx(MsgOutIdx);
+        MsgOutPos=0;
+        if (MsgOutBuf[MsgOutIdx][0] == '\0') {
+          MsgOutStarted=false;
+        }
+        return;
+      }
+    }
+  }
+}
+
+//*****************************************************************************
+bool tNMEA0183::SendMessage(const char *buf) {
+
+  if(strlen(buf) >= MAX_NMEA0183_MSG_BUF_LEN)
+    return false;
+
+  bool result=true;
+  int bufIdx = MsgOutIdx;
+  if(MsgOutStarted) {
+    result=false;
+    do {
+      bufIdx = nextOutIdx(bufIdx);
+      if (MsgOutBuf[bufIdx][0] != '\0') {
+        result=true; // Yep it is free
+      }
+    } while ((result==false) && (bufIdx != MsgOutIdx) );
+  }
+  if (result==true) {
+    strcpy(&MsgOutBuf[bufIdx][0],buf);
+    kick();
+  }
+  return result;
+}
+
 
