@@ -46,7 +46,7 @@ class tNMEA0183Msg
     // Clear message
     void Clear();
     // Print message fields
-    void PrintFields(Stream &port) const;
+    //void PrintFields(Stream &port) const;
     // Send message in valid NMEA0183 format
     void Send(Stream &port) const;
     // Return count of fields on message
