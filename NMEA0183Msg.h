@@ -61,6 +61,8 @@ class tNMEA0183Msg
     bool IsMessageCode(const char* _code) const { return (strcmp(MessageCode(),_code)==0); }
     //
     unsigned long MessageTime() const { return _MessageTime; }
+    // Return length of field
+    unsigned int FieldLen(uint8_t index) const;
 };
 
 #endif
