@@ -44,6 +44,7 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
 
 inline bool NMEA0183ParseRMC(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
                       double &TrueCOG, double &SOG, unsigned long &DaysSince1970, double &Variation, time_t *DateTime=0) {
+  (void)DateTime;
   return (NMEA0183Msg.IsMessageCode("RMC")
             ?NMEA0183ParseRMC_nc(NMEA0183Msg, GPSTime, Latitude, Longitude, TrueCOG, SOG, DaysSince1970, Variation, DateTime)
             :false);
@@ -59,6 +60,8 @@ inline bool NMEA0183ParseVTG(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, d
             :false);
 }
 
+bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double MagneticCOG, double SOG);
+
 // Heading will be returned be in radians
 bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading); 
 
@@ -67,5 +70,22 @@ inline bool NMEA0183ParseHDT(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeadin
             ?NMEA0183ParseHDT_nc(NMEA0183Msg,TrueHeading)
             :false);
 }
+
+
+// VDM is basically a bitstream
+bool NMEA0183ParseVDM_nc(const tNMEA0183Msg &NMEA0183Msg,
+			uint8_t &pkgCnt, uint8_t &pkgNmb,
+			unsigned int &seqMessageId, char &channel,
+			unsigned int &length, char *bitstream,
+			unsigned int &fillBits);
+
+
+inline bool NMEA0183ParseVDM(const tNMEA0183Msg &NMEA0183Msg, uint8_t &pkgCnt, uint8_t &pkgNmb,
+						unsigned int &seqMessageId, char &channel,
+						unsigned int &length, char* bitstream, unsigned int &fillBits) {
+  return (NMEA0183Msg.IsMessageCode("VDM") ?
+		NMEA0183ParseVDM_nc(NMEA0183Msg, pkgCnt, pkgNmb, seqMessageId, channel, length, bitstream, fillBits) : false);
+}
+
 
 #endif
