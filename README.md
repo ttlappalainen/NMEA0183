@@ -13,6 +13,5 @@ To use this library you also need latest version of:
 * Arduino Time library http://playground.arduino.cc/code/time
 * Standard C++ library for Arduino https://github.com/maniacbug/StandardCplusplus
 
-TODO: Rewrite the NMEA0183ToN2k example to use the new structs.
 To compile example NMEA0183ToN2k you need also NMEA2000 library https://github.com/ttlappalainen/NMEA2000
 
