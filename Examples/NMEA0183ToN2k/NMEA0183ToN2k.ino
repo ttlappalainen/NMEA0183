@@ -27,9 +27,7 @@
 #include "NMEA0183Handlers.h"
 #include "BoatData.h"
 
-#include <due_can.h>  // https://github.com/collin80/due_can
-#include <NMEA2000_due.h>
-tNMEA2000_due NMEA2000;
+#include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 
 #define NMEA0183SourceGPSCompass 3
 #define NMEA0183SourceGPS 1
