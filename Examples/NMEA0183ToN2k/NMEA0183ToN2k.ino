@@ -83,7 +83,7 @@ void SendSystemTime() {
   tN2kMsg N2kMsg;
 
   if ( (TimeUpdated+TimeUpdatePeriod<millis()) && BoatData.DaysSince1970>0 ) {
-    SetN2kPGNSystemTime(N2kMsg, 0, BoatData.DaysSince1970, BoatData.GPSTime);
+    SetN2kSystemTime(N2kMsg, 0, BoatData.DaysSince1970, BoatData.GPSTime);
     TimeUpdated=millis();
     NMEA2000.SendMsg(N2kMsg);
   }

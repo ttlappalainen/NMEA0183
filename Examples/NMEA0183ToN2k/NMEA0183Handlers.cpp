@@ -121,7 +121,7 @@ void HandleHDT(const tNMEA0183Msg &NMEA0183Msg) {
       while (MHeading<0) MHeading+=PI_2;
       while (MHeading>=PI_2) MHeading-=PI_2;
       // Stupid Raymarine can not use true heading
-      SetN2kPGNMagneticHeading(N2kMsg,1,MHeading,0,pBD->Variation);
+      SetN2kMagneticHeading(N2kMsg,1,MHeading,0,pBD->Variation);
 //      SetN2kPGNTrueHeading(N2kMsg,1,pBD->TrueHeading);
       pNMEA2000->SendMsg(N2kMsg);
     }
