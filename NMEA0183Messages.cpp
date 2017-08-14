@@ -108,22 +108,24 @@ time_t NMEA0183GPSDateTimetotime_t(const char *dateStr, const char *timeStr) {
 
 //*****************************************************************************
 // $GPGGA,182435.00,6023.20859,N,02219.99442,E,2,10,0.9,4.0,M,20.6,M,5.0,0120*4D
-bool NMEA0183ParseGGA_nc(const tNMEA0183Msg &NMEA0183Msg, tGGA &GGA) {
+bool NMEA0183ParseGGA_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
+                      int &GPSQualityIndicator, int &SatelliteCount, double &HDOP, double &Altitude, double &GeoidalSeparation,
+                      double &DGPSAge, int &DGPSReferenceStationID) {
   bool result=( NMEA0183Msg.FieldCount()>=14 );
   
   if ( result ) {
-    GGA.GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
-    GGA.latitude=LatLonToDouble(NMEA0183Msg.Field(1),NMEA0183Msg.Field(2)[0]);
-    GGA.longitude=LatLonToDouble(NMEA0183Msg.Field(3),NMEA0183Msg.Field(4)[0]);
-    GGA.GPSQualityIndicator=atoi(NMEA0183Msg.Field(5));
-    GGA.satelliteCount=atoi(NMEA0183Msg.Field(6));
-    GGA.HDOP=atof(NMEA0183Msg.Field(7));
-    GGA.altitude=atof(NMEA0183Msg.Field(8));
+    GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
+    Latitude=LatLonToDouble(NMEA0183Msg.Field(1),NMEA0183Msg.Field(2)[0]);
+    Longitude=LatLonToDouble(NMEA0183Msg.Field(3),NMEA0183Msg.Field(4)[0]);
+    GPSQualityIndicator=atoi(NMEA0183Msg.Field(5));
+    SatelliteCount=atoi(NMEA0183Msg.Field(6));
+    HDOP=atof(NMEA0183Msg.Field(7));
+    Altitude=atof(NMEA0183Msg.Field(8));
     // Check units of antenna altitude NMEA0183Msg.Field(9)
-    GGA.geoidalSeparation=atof(NMEA0183Msg.Field(10));
+    GeoidalSeparation=atof(NMEA0183Msg.Field(10));
     // Check units of GeoidalSeparation NMEA0183Msg.Field(11)
-    GGA.DGPSAge=atof(NMEA0183Msg.Field(12));
-    GGA.DGPSReferenceStationID=atoi(NMEA0183Msg.Field(13));
+    DGPSAge=atof(NMEA0183Msg.Field(12));
+    DGPSReferenceStationID=atoi(NMEA0183Msg.Field(13));
   }
     
   return result;
@@ -174,23 +176,23 @@ bool NMEA0183ParseRMB_nc(const tNMEA0183Msg &NMEA0183Msg, tRMB &RMB) {
 
 //*****************************************************************************
 // $GPRMC,092348.00,A,6035.04228,N,02115.15472,E,0.01,272.61,060815,7.2,E,D*34
-bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, tRMC &RMC, time_t *DateTime) {
+bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
+                      double &TrueCOG, double &SOG, unsigned long &DaysSince1970, double &Variation, time_t *DateTime) {
   bool result=( NMEA0183Msg.FieldCount()>=11 );
   
   if ( result ) {
     time_t lDT;
 
-    RMC.GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
-	RMC.status=NMEA0183Msg.Field(1)[0];
-    RMC.latitude=LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
-    RMC.longitude=LatLonToDouble(NMEA0183Msg.Field(4),NMEA0183Msg.Field(5)[0]);
-    RMC.SOG=atof(NMEA0183Msg.Field(6))*knToms;
-    RMC.trueCOG=atof(NMEA0183Msg.Field(7))*degToRad;
+    GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
+    Latitude=LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
+    Longitude=LatLonToDouble(NMEA0183Msg.Field(4),NMEA0183Msg.Field(5)[0]);
+    SOG=atof(NMEA0183Msg.Field(6))*knToms;
+    TrueCOG=atof(NMEA0183Msg.Field(7))*degToRad;
     
-    lDT=NMEA0183GPSDateTimetotime_t(NMEA0183Msg.Field(8),0)+floor(RMC.GPSTime);
-	RMC.daysSince1970=elapsedDays(lDT);
+    lDT=NMEA0183GPSDateTimetotime_t(NMEA0183Msg.Field(8),0)+floor(GPSTime);
+    DaysSince1970=elapsedDays(lDT);
     if (DateTime!=0) *DateTime=lDT;
-    RMC.variation=atof(NMEA0183Msg.Field(9))*degToRad; if (NMEA0183Msg.Field(10)[0]=='W') RMC.variation=-RMC.variation;
+    Variation=atof(NMEA0183Msg.Field(9))*degToRad; if (NMEA0183Msg.Field(10)[0]=='W') Variation=-Variation;
   }
 
   return result;

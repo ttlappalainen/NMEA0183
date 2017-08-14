@@ -75,33 +75,16 @@ void HandleNMEA0183Msg(const tNMEA0183Msg &NMEA0183Msg) {
 void HandleRMC(const tNMEA0183Msg &NMEA0183Msg) {
   if (pBD==0) return;
   
-  tRMC rmc;
-  if (NMEA0183ParseRMC_nc(NMEA0183Msg,rmc) && rmc.status == 'A') {
-    pBD->GPSTime = rmc.GPSTime;
-    pBD->Latitude = rmc.latitude;
-    pBD->Longitude = rmc.longitude;
-    pBD->COG = rmc.trueCOG;
-    pBD->SOG = rmc.SOG;
-    pBD->DaysSince1970 = rmc.daysSince1970;
-    pBD->Variation = rmc.variation;
+  if (NMEA0183ParseRMC_nc(NMEA0183Msg,pBD->GPSTime,pBD->Latitude,pBD->Longitude,pBD->COG,pBD->SOG,pBD->DaysSince1970,pBD->Variation)) {
   } else if (NMEA0183HandlersDebugStream!=0) { NMEA0183HandlersDebugStream->println("Failed to parse RMC"); }
 }
 
 void HandleGGA(const tNMEA0183Msg &NMEA0183Msg) {
   if (pBD==0) return;
   
-  tGGA gga;
-  if (NMEA0183ParseGGA_nc(NMEA0183Msg,gga) && gga.GPSQualityIndicator > 0) {
-    pBD->GPSTime = gga.GPSTime;
-    pBD->Latitude = gga.latitude;
-    pBD->Longitude = gga.longitude;
-    pBD->GPSQualityIndicator = gga.GPSQualityIndicator;
-    pBD->SatelliteCount = gga.satelliteCount;
-    pBD->HDOP = gga.HDOP;
-    pBD->Altitude = gga.altitude;
-    pBD->GeoidalSeparation = gga.geoidalSeparation;
-    pBD->DGPSAge = gga.DGPSAge;
-    pBD->DGPSReferenceStationID = gga.DGPSReferenceStationID;
+  if (NMEA0183ParseGGA_nc(NMEA0183Msg,pBD->GPSTime,pBD->Latitude,pBD->Longitude,
+                   pBD->GPSQualityIndicator,pBD->SatelliteCount,pBD->HDOP,pBD->Altitude,pBD->GeoidalSeparation,
+                   pBD->DGPSAge,pBD->DGPSReferenceStationID)) {
     if (pNMEA2000!=0) {
       tN2kMsg N2kMsg;
       SetN2kGNSS(N2kMsg,1,pBD->DaysSince1970,pBD->GPSTime,pBD->Latitude,pBD->Longitude,pBD->Altitude,
