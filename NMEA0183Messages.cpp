@@ -29,6 +29,7 @@ const double knToms=1852.0/3600.0;
 const double degToRad=pi/180.0; 
 const double msTokmh=3600.0/1000.0;
 const double msTokn=3600.0/1852.0;
+const double nmTom=1.852*1000;
 
 //*****************************************************************************
 void NMEA0183AddChecksum(char* msg) {
@@ -128,6 +129,49 @@ bool NMEA0183ParseGGA_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
   }
     
   return result;
+}
+
+
+//$GPGLL,5246.241,N,00506.648,E,155957,A*2B
+//$GPGLL,,,,,155648,*5B
+bool NMEA0183ParseGLL_nc(const tNMEA0183Msg &NMEA0183Msg, tGLL &GLL) {
+
+  bool result=( NMEA0183Msg.FieldCount()>= 6);
+  
+  if ( result ) {
+    GLL.latitude=LatLonToDouble(NMEA0183Msg.Field(0),NMEA0183Msg.Field(1)[0]);
+    GLL.longitude=LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
+    GLL.GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(4));
+	GLL.status=NMEA0183Msg.Field(5)[0];
+  }    
+  return result;
+}
+
+
+//$GPRMB,A,0.15,R,WOUBRG,WETERB,5213.400,N,00438.400,E,009.4,180.2,,V*07
+bool NMEA0183ParseRMB_nc(const tNMEA0183Msg &NMEA0183Msg, tRMB &RMB) {
+    
+  bool result=( NMEA0183Msg.FieldCount()>=13 );
+
+  if ( result ) {
+
+    //Ignore Field(0). Assume status is OK.
+	RMB.status=NMEA0183Msg.Field(0)[0];
+    RMB.xte=atof(NMEA0183Msg.Field(1))*nmTom;
+	//Left is negative in NMEA2000. Right is positive.
+	if (NMEA0183Msg.Field(2)[0]=='R') RMB.xte=-RMB.xte;
+    RMB.originID=NMEA0183Msg.Field(3);
+    RMB.destID=NMEA0183Msg.Field(4);
+    RMB.latitude=LatLonToDouble(NMEA0183Msg.Field(5),NMEA0183Msg.Field(6)[0]);
+    RMB.longitude=LatLonToDouble(NMEA0183Msg.Field(7),NMEA0183Msg.Field(8)[0]);
+    RMB.dtw=atof(NMEA0183Msg.Field(9))*nmTom;
+    RMB.btw=atof(NMEA0183Msg.Field(10))*degToRad;
+    RMB.vmg=atof(NMEA0183Msg.Field(11))*knToms;
+	RMB.arrivalAlarm=NMEA0183Msg.Field(12)[0];
+  }
+
+  return result;
+  
 }
 
 //*****************************************************************************
@@ -264,4 +308,51 @@ bool NMEA0183ParseVDM_nc(const tNMEA0183Msg &NMEA0183Msg,
   }
 
   return result;
+}
+
+//$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
+bool NMEA0183ParseRTE_nc(const tNMEA0183Msg &NMEA0183Msg, tRTE &tRTE) {
+	
+    bool result=( NMEA0183Msg.FieldCount()>=4);
+
+    if ( result ) {
+	
+	 tRTE.nrOfsentences = atoi(NMEA0183Msg.Field(0));
+	 tRTE.currSentence = atoi(NMEA0183Msg.Field(1));
+	 tRTE.type = NMEA0183Msg.Field(2)[0];
+	 tRTE.routeID = atoi(NMEA0183Msg.Field(3));
+	 
+		 for (int i=4; i < NMEA0183Msg.FieldCount(); i++) {
+		 	tRTE.wp.push_back(NMEA0183Msg.Field(i));
+		 }
+	 }	
+    return result;
+}
+
+//$GPWPL,5208.700,N,00438.600,E,MOLENB*4D
+bool NMEA0183ParseWPL_nc(const tNMEA0183Msg &NMEA0183Msg, tWPL &wpl) {
+	
+    bool result=( NMEA0183Msg.FieldCount()>=5);
+
+    if ( result ) {
+		
+		wpl.latitude = LatLonToDouble(NMEA0183Msg.Field(0),NMEA0183Msg.Field(1)[0]);
+		wpl.longitude = LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
+		wpl.name = NMEA0183Msg.Field(4);
+	 }		
+    return result;
+}
+
+//$GPBOD,001.1,T,003.4,M,WETERB,WOUBRG*49
+bool NMEA0183ParseBOD_nc(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
+	
+    bool result=( NMEA0183Msg.FieldCount()>=6);
+
+    if ( result ) {
+		bod.trueBearing = atof(NMEA0183Msg.Field(0))*degToRad;
+		bod.magBearing = atof(NMEA0183Msg.Field(2))*degToRad;
+		bod.destID = NMEA0183Msg.Field(4);
+		bod.originID = NMEA0183Msg.Field(5);
+	 }		
+    return result;
 }

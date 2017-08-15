@@ -16,6 +16,7 @@
 
 #define N2K_SOURCE 15
 
+#include <StandardCplusplus.h>
 #include <Arduino.h>
 #include <Time.h>
 #include <N2kMsg.h>
@@ -27,9 +28,7 @@
 #include "NMEA0183Handlers.h"
 #include "BoatData.h"
 
-#include <due_can.h>  // https://github.com/collin80/due_can
-#include <NMEA2000_due.h>
-tNMEA2000_due NMEA2000;
+#include <NMEA2000_CAN.h>  // This will automatically choose right CAN library and create suitable NMEA2000 object
 
 #define NMEA0183SourceGPSCompass 3
 #define NMEA0183SourceGPS 1
@@ -83,7 +82,7 @@ void SendSystemTime() {
   tN2kMsg N2kMsg;
 
   if ( (TimeUpdated+TimeUpdatePeriod<millis()) && BoatData.DaysSince1970>0 ) {
-    SetN2kPGNSystemTime(N2kMsg, 0, BoatData.DaysSince1970, BoatData.GPSTime);
+    SetN2kSystemTime(N2kMsg, 0, BoatData.DaysSince1970, BoatData.GPSTime);
     TimeUpdated=millis();
     NMEA2000.SendMsg(N2kMsg);
   }
