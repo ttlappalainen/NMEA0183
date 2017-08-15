@@ -16,7 +16,6 @@
 
 #define N2K_SOURCE 15
 
-#include <StandardCplusplus.h>
 #include <Arduino.h>
 #include <Time.h>
 #include <N2kMsg.h>

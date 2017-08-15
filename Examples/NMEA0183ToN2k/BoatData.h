@@ -1,7 +1,7 @@
 #ifndef _BoatData_H_
 #define _BoatData_H_
 
-typedef struct tBoatData {
+struct tBoatData {
   unsigned long DaysSince1970;   // Days since 1970-01-01
   
   double TrueHeading,SOG,COG,Variation,

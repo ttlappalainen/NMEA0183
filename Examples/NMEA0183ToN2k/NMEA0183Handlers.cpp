@@ -19,10 +19,10 @@ Author: Timo Lappalainen
 #include <NMEA0183Messages.h>
 #include "NMEA0183Handlers.h"
 
-typedef struct {
-  char *Code;
+struct tNMEA0183Handler {
+  const char *Code;
   void (*Handler)(const tNMEA0183Msg &NMEA0183Msg); 
-} tNMEA0183Handler;
+};
 
 // Predefinition for functions to make it possible for constant definition for NMEA0183Handlers
 void HandleRMC(const tNMEA0183Msg &NMEA0183Msg);
