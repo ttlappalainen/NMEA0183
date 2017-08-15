@@ -160,14 +160,14 @@ bool NMEA0183ParseRMB_nc(const tNMEA0183Msg &NMEA0183Msg, tRMB &RMB) {
     RMB.xte=atof(NMEA0183Msg.Field(1))*nmTom;
 	//Left is negative in NMEA2000. Right is positive.
 	if (NMEA0183Msg.Field(2)[0]=='R') RMB.xte=-RMB.xte;
-    RMB.originID=NMEA0183Msg.Field(3);
-    RMB.destID=NMEA0183Msg.Field(4);
+    strncpy(RMB.originID,NMEA0183Msg.Field(3),sizeof(RMB.originID)/sizeof(char));
+    strncpy(RMB.destID,NMEA0183Msg.Field(4),sizeof(RMB.destID)/sizeof(char));
     RMB.latitude=LatLonToDouble(NMEA0183Msg.Field(5),NMEA0183Msg.Field(6)[0]);
     RMB.longitude=LatLonToDouble(NMEA0183Msg.Field(7),NMEA0183Msg.Field(8)[0]);
     RMB.dtw=atof(NMEA0183Msg.Field(9))*nmTom;
     RMB.btw=atof(NMEA0183Msg.Field(10))*degToRad;
     RMB.vmg=atof(NMEA0183Msg.Field(11))*knToms;
-	RMB.arrivalAlarm=NMEA0183Msg.Field(12)[0];
+	  RMB.arrivalAlarm=NMEA0183Msg.Field(12)[0];
   }
 
   return result;
@@ -323,7 +323,7 @@ bool NMEA0183ParseRTE_nc(const tNMEA0183Msg &NMEA0183Msg, tRTE &tRTE) {
 	 tRTE.routeID = atoi(NMEA0183Msg.Field(3));
 	 
 		 for (int i=4; i < NMEA0183Msg.FieldCount(); i++) {
-		 	tRTE.wp.push_back(NMEA0183Msg.Field(i));
+//		 	tRTE.wp.push_back(NMEA0183Msg.Field(i));
 		 }
 	 }	
     return result;
@@ -338,7 +338,7 @@ bool NMEA0183ParseWPL_nc(const tNMEA0183Msg &NMEA0183Msg, tWPL &wpl) {
 		
 		wpl.latitude = LatLonToDouble(NMEA0183Msg.Field(0),NMEA0183Msg.Field(1)[0]);
 		wpl.longitude = LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
-		wpl.name = NMEA0183Msg.Field(4);
+    strncpy(wpl.name,NMEA0183Msg.Field(4),sizeof(wpl.name)/sizeof(char));
 	 }		
     return result;
 }
@@ -351,8 +351,8 @@ bool NMEA0183ParseBOD_nc(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
     if ( result ) {
 		bod.trueBearing = atof(NMEA0183Msg.Field(0))*degToRad;
 		bod.magBearing = atof(NMEA0183Msg.Field(2))*degToRad;
-		bod.destID = NMEA0183Msg.Field(4);
-		bod.originID = NMEA0183Msg.Field(5);
+    strncpy(bod.destID,NMEA0183Msg.Field(4),sizeof(bod.destID)/sizeof(char));
+    strncpy(bod.originID,NMEA0183Msg.Field(5),sizeof(bod.originID)/sizeof(char));
 	 }		
     return result;
 }

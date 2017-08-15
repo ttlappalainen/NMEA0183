@@ -25,8 +25,10 @@ Author: Timo Lappalainen
 #define _tNMEA0183_MESSAGES_H_
 #include <TimeLib.h>
 #include <NMEA0183Msg.h>
-#include <list>
-#include <string>
+//#include <list>
+//#include <string>
+
+#define NMEA0183MaxWpNameLength 20
 
 //$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
 struct tRTE {
@@ -37,7 +39,7 @@ struct tRTE {
 	//'c' = complete route list, 'w' = first listed waypoint is start of current leg
 	char type;
 	unsigned int routeID;
-	std::list<char*> wp;
+//	std::list<char*> wp;
 };
 
 struct tGGA {
@@ -76,8 +78,8 @@ struct tRMB {
 	double vmg;
 	//'A' = arrived, 'V' = not arrived
 	char arrivalAlarm;
-	std::string originID;
-	std::string destID;
+  char originID[NMEA0183MaxWpNameLength];
+  char destID[NMEA0183MaxWpNameLength];
 };
 
 struct tRMC {
@@ -99,7 +101,7 @@ struct tWPL {
 	//total number of sentences needed for full data
 	double latitude;
 	double longitude;
-	std::string name;
+  char name[NMEA0183MaxWpNameLength];
 };
 
 struct tBOD {
@@ -108,9 +110,9 @@ struct tBOD {
 	//Magnetic bearing from origin to dest
 	double magBearing;
 	//Origin waypoint ID
-	std::string originID;
+  char originID[NMEA0183MaxWpNameLength];
 	//Destination waypoint ID
-	std::string destID;
+  char destID[NMEA0183MaxWpNameLength];
 };
 
 void NMEA0183AddChecksum(char* msg);
