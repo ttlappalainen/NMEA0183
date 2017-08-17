@@ -1,7 +1,7 @@
 /* 
 NMEA0183Msg.cpp
 
-2015-2016 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+2015-2017 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
 
 Author: Timo Lappalainen
 
@@ -21,8 +21,13 @@ Author: Timo Lappalainen
   1301  USA
 */
 
-#include <NMEA0183Msg.h>
+#include <math.h>
+#include <TimeLib.h>
+#include "NMEA0183Msg.h"
 
+const char *tNMEA0183Msg::EmptyField="";
+
+//*****************************************************************************
 tNMEA0183Msg::tNMEA0183Msg() {
   Clear();
 }
@@ -37,7 +42,7 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
   Clear();
   _MessageTime=millis();
   
-  if (buf[i]!='$') return result; // Invalid message
+  if ( buf[i]!='$' &&  buf[i]!='!' ) return result; // Invalid message
   Prefix=buf[i];
   i++; // Pass start prefix
   
@@ -85,10 +90,144 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
 }
 
 //*****************************************************************************
+bool tNMEA0183Msg::Init(const char *_MessageCode, const char *_Sender, char _Prefix) {
+  Clear();
+  size_t nSender=2;
+  size_t nMessageCode=0;
+  if ( _Sender==0 && (nSender=strlen(_Sender))>7 ) return false;
+  if ( _MessageCode==0 || (nMessageCode=strlen(_MessageCode))>10 ) return false;
+  
+  Prefix=_Prefix;
+  _MessageTime=millis();
+  if ( _Sender!=0 && _Sender[0]!=0 && _Sender[1]!=0 ) {
+    Data[0]=_Sender[0]; Data[1]=_Sender[1];
+  } else {
+    Data[0]='I'; Data[1]='I';
+  }
+  CheckSum^=Data[0];
+  CheckSum^=Data[1];
+  Data[2]=0;
+  strcpy((Data+3),_MessageCode);
+  iAddData=3+nMessageCode+1;
+  
+  for ( int i=3; Data[i]!=0; i++ ) CheckSum^=Data[i];
+  
+  return true;
+}
+
+//*****************************************************************************
+bool tNMEA0183Msg::AddEmptyField() {
+  if ( iAddData>=MAX_NMEA0183_MSG_LEN ||
+       _FieldCount>=MAX_NMEA0183_MSG_FIELDS ) return false; // Is there room for any data
+       
+  Data[iAddData]=0;
+  CheckSum^=',';
+  Fields[_FieldCount]=iAddData;   // Set start of field
+  iAddData++;
+  _FieldCount++;
+  
+  return true;
+}
+
+//*****************************************************************************
+bool tNMEA0183Msg::AddStrField(const char *FieldData) {
+  if ( iAddData>=MAX_NMEA0183_MSG_LEN ||
+       _FieldCount>=MAX_NMEA0183_MSG_FIELDS ) return false; // Is there room for any data
+
+  int i=0;
+  uint8_t cs=CheckSum;
+  uint8_t iAdd=iAddData;
+  
+  Data[iAdd]=0;
+  cs^=',';
+  Fields[_FieldCount]=iAdd;   // Set start of field
+  if ( FieldData!=0 ) {
+    for (;iAdd<MAX_NMEA0183_MSG_LEN-1 && FieldData[i]!=0; i++,iAdd++) {
+      Data[iAdd]=FieldData[i];
+      cs^=FieldData[i];
+    }
+  }
+  Data[iAdd]=0;
+  if ( FieldData!=0 && FieldData[i]!=0 ) return false; // Return false, if FieldData does not fit.
+  
+  iAddData=iAdd+1;
+  _FieldCount++;
+  CheckSum=cs;
+  return true;
+}
+
+//*****************************************************************************
+bool tNMEA0183Msg::AddDoubleField(double val, double multiplier, const char *Format) {
+  if ( val==NMEA0183DoubleNA ) return AddEmptyField();
+
+  if ( iAddData>=MAX_NMEA0183_MSG_LEN ||
+       _FieldCount>=MAX_NMEA0183_MSG_FIELDS ) return false; // Is there room for any data
+
+  int needSize;
+  uint8_t cs=CheckSum;
+  
+  cs^=',';
+  Fields[_FieldCount]=iAddData;   // Set start of field
+  needSize=snprintf((Data+iAddData),MAX_NMEA0183_MSG_LEN-iAddData,Format,val*multiplier);
+  ForceNullTermination();
+  
+  if ( needSize>MAX_NMEA0183_MSG_LEN-1-iAddData ) return false;
+  
+  for ( int i=iAddData; Data[i]!=0; i++ ) cs^=Data[i];
+  iAddData+=needSize+1;
+  
+  _FieldCount++;
+  CheckSum=cs;
+  return true;
+}
+
+//*****************************************************************************
+bool tNMEA0183Msg::AddTimeField(double GPSTime, const char *Format) {
+  return AddDoubleField(GPSTimeToNMEA0183Time(GPSTime),1,Format);
+}
+
+//*****************************************************************************
+bool tNMEA0183Msg::AddDaysField(unsigned long DaysSince1970) {
+  if ( DaysSince1970==NMEA0183UInt32NA  ) return AddEmptyField();
+  
+  return AddDoubleField(DaysToNMEA0183Date(DaysSince1970),1,"%06.0f");
+}
+
+//*****************************************************************************
+bool tNMEA0183Msg::AddLatitudeField(double Latitude, const char *Format) {
+  if ( Latitude==NMEA0183DoubleNA ) return AddEmptyField() & AddEmptyField(); 
+  
+  if ( iAddData>=MAX_NMEA0183_MSG_LEN-8 ||
+       _FieldCount>=MAX_NMEA0183_MSG_FIELDS-1 ) return false; // Is there room for any data
+       
+  if ( ! AddDoubleField(DoubleToddmm((Latitude>=0?Latitude:-Latitude)),1,"%.3f") ) return false; // abs generated -0.00 for 0.00??
+  
+  if ( Latitude>=0 ) return AddStrField("N");
+  
+  return AddStrField("S");
+}
+
+//*****************************************************************************
+bool tNMEA0183Msg::AddLongitudeField(double Longitude, const char *Format) {
+  if ( Longitude==NMEA0183DoubleNA ) return AddEmptyField() & AddEmptyField(); 
+  
+  if ( iAddData>=MAX_NMEA0183_MSG_LEN-8 ||
+       _FieldCount>=MAX_NMEA0183_MSG_FIELDS-1 ) return false; // Is there room for any data
+       
+  if ( ! AddDoubleField(DoubleToddmm((Longitude>=0?Longitude:-Longitude)),1,"%.3f") ) return false; // abs generated -0.00 for 0.00??
+  
+  if ( Longitude>=0 ) return AddStrField("E");
+  
+  return AddStrField("W");
+}
+
+
+//*****************************************************************************
 void tNMEA0183Msg::Clear() {
   SourceID=0;
   Data[0]=0;  // Sender is empty
   Data[2]=0;  // Message code is empty
+  iAddData=0;
   _FieldCount=0;
   Fields[0]=0;
   _MessageTime=0;
@@ -120,7 +259,7 @@ const char *tNMEA0183Msg::Field(uint8_t index) const {
   if (index<FieldCount()) {
     return Data+Fields[index];
   } else {
-    return Data;
+    return EmptyField;
   }
 }
 
@@ -132,3 +271,44 @@ unsigned int tNMEA0183Msg::FieldLen(uint8_t index) const {
     return 0;
   }
 }
+
+//*****************************************************************************
+double tNMEA0183Msg::GPSTimeToNMEA0183Time(double GPSTime) {
+  if ( GPSTime==NMEA0183DoubleNA ) return GPSTime;
+  
+  double intpart;
+  double NMEA0183Time=0;
+  GPSTime=modf(GPSTime/3600,&intpart);
+  NMEA0183Time+=(unsigned long)(intpart*10000);
+  GPSTime=modf(GPSTime*60,&intpart);
+  NMEA0183Time+=(unsigned long)(intpart*100);
+  NMEA0183Time+=GPSTime*60;
+  //GPSTime=modf(GPSTime*60,&intpart);
+  //NMEA0183Time+=(unsigned long)(intpart);
+  
+  return NMEA0183Time;
+}
+
+//*****************************************************************************
+double tNMEA0183Msg::DoubleToddmm(double val) {
+  if ( val!=NMEA0183DoubleNA  ) {
+    double intpart;
+    val=modf(val,&intpart);
+    val=intpart*100+val*60;
+  }
+  
+  return val;
+}
+
+//*****************************************************************************
+unsigned long tNMEA0183Msg::DaysToNMEA0183Date(unsigned long val) {
+  if ( val!=NMEA0183UInt32NA  ) {
+    tmElements_t tm;
+    time_t t=val*SECS_PER_DAY; //daysToTime_t((val));
+    breakTime(t, tm);
+    val=tm.Day*10000+(tm.Month)*100+(tm.Year+1970-2000);
+  }
+  
+  return val;
+}
+

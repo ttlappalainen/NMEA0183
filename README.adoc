@@ -19,7 +19,7 @@ To compile example NMEA0183ToN2k you need also NMEA2000 library https://github.c
 
 == License ==
 
-2015 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+2015-2017 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
 
 Author: Timo Lappalainen
 

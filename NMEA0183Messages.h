@@ -1,7 +1,7 @@
 /* 
 NMEA0183Messages.h
 
-2015-2016 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+2015-2017 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
 
 Author: Timo Lappalainen
 
@@ -24,7 +24,7 @@ Author: Timo Lappalainen
 #ifndef _tNMEA0183_MESSAGES_H_
 #define _tNMEA0183_MESSAGES_H_
 #include <TimeLib.h>
-#include <NMEA0183Msg.h>
+#include "NMEA0183Msg.h"
 //#include <list>
 //#include <string>
 
@@ -149,6 +149,8 @@ inline bool NMEA0183ParseRMB(const tNMEA0183Msg &NMEA0183Msg, tRMB &rmb) {
     return (NMEA0183Msg.IsMessageCode("RMB") ?
         NMEA0183ParseRMB_nc(NMEA0183Msg, rmb) : false);
 }
+
+//*****************************************************************************
 // RMC
 bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
                       double &TrueCOG, double &SOG, unsigned long &DaysSince1970, double &Variation, time_t *DateTime=0);
@@ -165,7 +167,11 @@ inline bool NMEA0183ParseRMC(const tNMEA0183Msg &NMEA0183Msg, tRMC &rmc, time_t 
 	
 	return NMEA0183ParseRMC(NMEA0183Msg, rmc.GPSTime, rmc.latitude, rmc.longitude, rmc.trueCOG, rmc.SOG, rmc.daysSince1970, rmc.variation, DateTime);
 }
-                      
+ 
+bool NMEA0183SetRMC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, double Longitude,
+                      double TrueCOG, double SOG, unsigned long DaysSince1970, double Variation, const char *Src="GP");
+ 
+//*****************************************************************************
 // COG will be returned be in radians
 // SOG will be returned in m/s
 bool NMEA0183ParseVTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, double &MagneticCOG, double &SOG);
@@ -176,8 +182,12 @@ inline bool NMEA0183ParseVTG(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, d
             :false);
 }
 
+bool NMEA0183SetVTG(tNMEA0183Msg &NMEA0183Msg, double TrueCOG, double MagneticCOG, double SOG, const char *Src="GP");
+
+// This is obsolet. Use NMEA0183SetVTG
 bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double MagneticCOG, double SOG);
 
+//*****************************************************************************
 // Heading will be returned be in radians
 bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading); 
 
@@ -187,7 +197,9 @@ inline bool NMEA0183ParseHDT(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeadin
             :false);
 }
 
+bool NMEA0183SetHDG(tNMEA0183Msg &NMEA0183Msg, double Heading, double Deviation, double Variation, const char *Src="GP");
 
+//*****************************************************************************
 // VDM is basically a bitstream
 bool NMEA0183ParseVDM_nc(const tNMEA0183Msg &NMEA0183Msg,
 			uint8_t &pkgCnt, uint8_t &pkgNmb,
