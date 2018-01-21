@@ -321,9 +321,10 @@ bool NMEA0183ParseRTE_nc(const tNMEA0183Msg &NMEA0183Msg, tRTE &tRTE) {
 	 tRTE.currSentence = atoi(NMEA0183Msg.Field(1));
 	 tRTE.type = NMEA0183Msg.Field(2)[0];
 	 tRTE.routeID = atoi(NMEA0183Msg.Field(3));
+	 tRTE.nrOfwp = NMEA0183Msg.FieldCount() - 4;
 	 
 		 for (int i=4; i < NMEA0183Msg.FieldCount(); i++) {
-//		 	tRTE.wp.push_back(NMEA0183Msg.Field(i));
+			strcpy(tRTE.wp[i-4],NMEA0183Msg.Field(i));
 		 }
 	 }	
     return result;

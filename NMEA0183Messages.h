@@ -25,10 +25,12 @@ Author: Timo Lappalainen
 #define _tNMEA0183_MESSAGES_H_
 #include <TimeLib.h>
 #include <NMEA0183Msg.h>
-//#include <list>
-//#include <string>
 
 #define NMEA0183MaxWpNameLength 20
+
+//A NMEA sentence can at max be 80 characters long including the $GPRTE,2,1,c,0 part, the checksum and carriage return.
+//Which leaves 62 characters for WP's, in case of single character waypoints a RTE message could at max host 31 waypoints.
+#define NMEA0183_MAX_WP_IN_RTE 31
 
 //$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
 struct tRTE {
@@ -39,7 +41,8 @@ struct tRTE {
 	//'c' = complete route list, 'w' = first listed waypoint is start of current leg
 	char type;
 	unsigned int routeID;
-//	std::list<char*> wp;
+	char wp[NMEA0183_MAX_WP_IN_RTE][NMEA0183MaxWpNameLength + 1];
+	unsigned int nrOfwp;
 };
 
 struct tGGA {
