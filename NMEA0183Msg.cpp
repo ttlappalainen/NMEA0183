@@ -200,7 +200,7 @@ bool tNMEA0183Msg::AddLatitudeField(double Latitude, const char *Format) {
   if ( iAddData>=MAX_NMEA0183_MSG_LEN-8 ||
        _FieldCount>=MAX_NMEA0183_MSG_FIELDS-1 ) return false; // Is there room for any data
        
-  if ( ! AddDoubleField(DoubleToddmm((Latitude>=0?Latitude:-Latitude)),1,"%.3f") ) return false; // abs generated -0.00 for 0.00??
+  if ( ! AddDoubleField(DoubleToddmm((Latitude>=0?Latitude:-Latitude)),1,Format) ) return false; // abs generated -0.00 for 0.00??
   
   if ( Latitude>=0 ) return AddStrField("N");
   
@@ -214,7 +214,7 @@ bool tNMEA0183Msg::AddLongitudeField(double Longitude, const char *Format) {
   if ( iAddData>=MAX_NMEA0183_MSG_LEN-8 ||
        _FieldCount>=MAX_NMEA0183_MSG_FIELDS-1 ) return false; // Is there room for any data
        
-  if ( ! AddDoubleField(DoubleToddmm((Longitude>=0?Longitude:-Longitude)),1,"%.3f") ) return false; // abs generated -0.00 for 0.00??
+  if ( ! AddDoubleField(DoubleToddmm((Longitude>=0?Longitude:-Longitude)),1,Format) ) return false; // abs generated -0.00 for 0.00??
   
   if ( Longitude>=0 ) return AddStrField("E");
   
