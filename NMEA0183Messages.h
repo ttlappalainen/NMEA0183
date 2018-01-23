@@ -188,6 +188,18 @@ bool NMEA0183SetVTG(tNMEA0183Msg &NMEA0183Msg, double TrueCOG, double MagneticCO
 bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double MagneticCOG, double SOG);
 
 //*****************************************************************************
+// Rate of turn will be returned be in radians
+bool NMEA0183ParseROT_nc(const tNMEA0183Msg &NMEA0183Msg,double &RateOfTurn); 
+
+inline bool NMEA0183ParseROT(const tNMEA0183Msg &NMEA0183Msg, double &RateOfTurn) {
+  return (NMEA0183Msg.IsMessageCode("ROT")
+            ?NMEA0183ParseROT_nc(NMEA0183Msg,RateOfTurn)
+            :false);
+}
+
+bool NMEA0183SetROT(tNMEA0183Msg &NMEA0183Msg, double RateOfTurn, const char *Src="GP");
+
+//*****************************************************************************
 // Heading will be returned be in radians
 bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading); 
 
@@ -197,6 +209,21 @@ inline bool NMEA0183ParseHDT(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeadin
             :false);
 }
 
+bool NMEA0183SetHDT(tNMEA0183Msg &NMEA0183Msg, double Heading, const char *Src="GP");
+
+//*****************************************************************************
+// Heading will be returned be in radians
+bool NMEA0183ParseHDM_nc(const tNMEA0183Msg &NMEA0183Msg,double &MagneticHeading); 
+
+inline bool NMEA0183ParseHDM(const tNMEA0183Msg &NMEA0183Msg, double &MagneticHeading) {
+  return (NMEA0183Msg.IsMessageCode("HDM")
+            ?NMEA0183ParseHDT_nc(NMEA0183Msg,MagneticHeading)
+            :false);
+}
+
+bool NMEA0183SetHDM(tNMEA0183Msg &NMEA0183Msg, double Heading, const char *Src="GP");
+
+//*****************************************************************************
 bool NMEA0183SetHDG(tNMEA0183Msg &NMEA0183Msg, double Heading, double Deviation, double Variation, const char *Src="GP");
 
 //*****************************************************************************

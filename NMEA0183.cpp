@@ -130,7 +130,6 @@ bool tNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
     SendBuf(",");
     SendBuf(NMEA0183Msg.Field(i));
   }
-  sprintf(buf,"*%X\r\n",NMEA0183Msg.GetCheckSum());
   return SendBuf(buf); 
 }
 

@@ -327,6 +327,24 @@ bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double Magnet
 }
 
 //*****************************************************************************
+// $HEROT,4.71,A*1B
+bool NMEA0183ParseROT_nc(const tNMEA0183Msg &NMEA0183Msg,double &RateOfTurn) {
+  bool result=( NMEA0183Msg.FieldCount()>=2 );
+  if ( result ) {
+    RateOfTurn=atof(NMEA0183Msg.Field(0))*degToRad;
+  }
+
+  return result;
+}
+
+bool NMEA0183SetROT(tNMEA0183Msg &NMEA0183Msg, double RateOfTurn, const char *Src) {
+  if ( !NMEA0183Msg.Init("ROT",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(RateOfTurn,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  return true;
+}
+
+//*****************************************************************************
 // $HEHDT,244.71,T*1B
 bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   bool result=( NMEA0183Msg.FieldCount()>=2 );
@@ -337,6 +355,32 @@ bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   return result;
 }
 
+bool NMEA0183SetHDT(tNMEA0183Msg &NMEA0183Msg, double Heading, const char *Src) {
+  if ( !NMEA0183Msg.Init("HDT",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Heading,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddStrField("T") ) return false;
+  return true;
+}
+
+//*****************************************************************************
+// $HEHDM,244.71,M*1B
+bool NMEA0183ParseHDM_nc(const tNMEA0183Msg &NMEA0183Msg,double &MagneticHeading) {
+  bool result=( NMEA0183Msg.FieldCount()>=2 );
+  if ( result ) {
+    MagneticHeading=atof(NMEA0183Msg.Field(0))*degToRad;
+  }
+
+  return result;
+}
+
+bool NMEA0183SetHDM(tNMEA0183Msg &NMEA0183Msg, double Heading, const char *Src) {
+  if ( !NMEA0183Msg.Init("HDM",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Heading,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddStrField("M") ) return false;
+  return true;
+}
+
+//*****************************************************************************
 bool NMEA0183SetHDG(tNMEA0183Msg &NMEA0183Msg, double Heading, double Deviation, double Variation, const char *Src) {
   if ( !NMEA0183Msg.Init("HDG",Src) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(Heading,radToDeg) ) return false;
