@@ -26,7 +26,9 @@ Author: Timo Lappalainen
 #include <TimeLib.h>
 #include <NMEA0183Msg.h>
 
-#define NMEA0183MaxWpNameLength 20
+#if !defined(NMEA0183_MAX_WP_NAME_LENGTH)
+  #define NMEA0183_MAX_WP_NAME_LENGTH 20
+#endif
 
 //A NMEA sentence can at max be 80 characters long including the $GPRTE,2,1,c,0 part, the checksum and carriage return.
 //Which leaves 62 characters for WP's, in case of single character waypoints a RTE message could at max host 31 waypoints.
@@ -41,7 +43,7 @@ struct tRTE {
 	//'c' = complete route list, 'w' = first listed waypoint is start of current leg
 	char type;
 	unsigned int routeID;
-	char wp[NMEA0183_MAX_WP_IN_RTE][NMEA0183MaxWpNameLength + 1];
+	char wp[NMEA0183_MAX_WP_IN_RTE][NMEA0183_MAX_WP_NAME_LENGTH + 1];
 	unsigned int nrOfwp;
 };
 
@@ -81,8 +83,8 @@ struct tRMB {
 	double vmg;
 	//'A' = arrived, 'V' = not arrived
 	char arrivalAlarm;
-  char originID[NMEA0183MaxWpNameLength];
-  char destID[NMEA0183MaxWpNameLength];
+  char originID[NMEA0183_MAX_WP_NAME_LENGTH];
+  char destID[NMEA0183_MAX_WP_NAME_LENGTH];
 };
 
 struct tRMC {
@@ -104,7 +106,7 @@ struct tWPL {
 	//total number of sentences needed for full data
 	double latitude;
 	double longitude;
-  char name[NMEA0183MaxWpNameLength];
+  char name[NMEA0183_MAX_WP_NAME_LENGTH];
 };
 
 struct tBOD {
@@ -113,9 +115,9 @@ struct tBOD {
 	//Magnetic bearing from origin to dest
 	double magBearing;
 	//Origin waypoint ID
-  char originID[NMEA0183MaxWpNameLength];
+  char originID[NMEA0183_MAX_WP_NAME_LENGTH];
 	//Destination waypoint ID
-  char destID[NMEA0183MaxWpNameLength];
+  char destID[NMEA0183_MAX_WP_NAME_LENGTH];
 };
 
 void NMEA0183AddChecksum(char* msg);
