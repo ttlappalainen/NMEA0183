@@ -445,9 +445,9 @@ bool NMEA0183ParseRTE_nc(const tNMEA0183Msg &NMEA0183Msg, tRTE &tRTE) {
 	 tRTE.currSentence = atoi(NMEA0183Msg.Field(1));
 	 tRTE.type = NMEA0183Msg.Field(2)[0];
 	 tRTE.routeID = atoi(NMEA0183Msg.Field(3));
-	 tRTE.nrOfwp = NMEA0183Msg.FieldCount() - 4;
-	 
-		 for (int i=4; i < NMEA0183Msg.FieldCount(); i++) {
+	 tRTE.nrOfwp = NMEA0183Msg.FieldCount() - 4 > NMEA0183_MAX_WP_IN_RTE ? NMEA0183_MAX_WP_IN_RTE : NMEA0183Msg.FieldCount() - 4;
+
+		 for (int i=4; i < NMEA0183Msg.FieldCount() && i - 4 < NMEA0183_MAX_WP_IN_RTE; i++) {
 			strcpy(tRTE.wp[i-4],NMEA0183Msg.Field(i));
 		 }
 	 }	

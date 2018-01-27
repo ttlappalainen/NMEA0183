@@ -30,9 +30,17 @@ Author: Timo Lappalainen
   #define NMEA0183_MAX_WP_NAME_LENGTH 20
 #endif
 
-//A NMEA sentence can at max be 80 characters long including the $GPRTE,2,1,c,0 part, the checksum and carriage return.
-//Which leaves 62 characters for WP's, in case of single character waypoints a RTE message could at max host 31 waypoints.
-#define NMEA0183_MAX_WP_IN_RTE 31
+
+
+/*
+ * A NMEA sentence can at max be 80 characters long including the $GPRTE,2,1,c,0 part, the checksum and carriage return.
+ * Which leaves 62 characters for WP's, in case of single character waypoints a RTE message could at max host 31 waypoints.
+ * For the sensible people that do not use single character waypoint names it can be overridden to save memory usage, but
+ * use with care because it could lead to dropping waypoint names.
+ */
+#if !defined(NMEA0183_MAX_WP_IN_RTE)
+	#define NMEA0183_MAX_WP_IN_RTE 31
+#endif
 
 //$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
 struct tRTE {
