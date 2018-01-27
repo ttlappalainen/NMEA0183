@@ -1,7 +1,7 @@
 /* 
 NMEA0183Messages.cpp
 
-2015-2016 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+2015-2017 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
 
 Author: Timo Lappalainen
 
@@ -21,12 +21,17 @@ Author: Timo Lappalainen
   1301  USA
 */
 
-#include <NMEA0183Messages.h>
+#include "NMEA0183Messages.h"
+#include <math.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 const double pi=3.1415926535897932384626433832795;
 const double kmhToms=1000.0/3600.0; 
 const double knToms=1852.0/3600.0; 
 const double degToRad=pi/180.0; 
+const double radToDeg=180.0/pi; 
 const double msTokmh=3600.0/1000.0;
 const double msTokn=3600.0/1852.0;
 const double nmTom=1.852*1000;
@@ -142,7 +147,7 @@ bool NMEA0183ParseGLL_nc(const tNMEA0183Msg &NMEA0183Msg, tGLL &GLL) {
     GLL.latitude=LatLonToDouble(NMEA0183Msg.Field(0),NMEA0183Msg.Field(1)[0]);
     GLL.longitude=LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
     GLL.GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(4));
-	GLL.status=NMEA0183Msg.Field(5)[0];
+    GLL.status=NMEA0183Msg.Field(5)[0];
   }    
   return result;
 }
@@ -155,13 +160,15 @@ bool NMEA0183ParseRMB_nc(const tNMEA0183Msg &NMEA0183Msg, tRMB &RMB) {
 
   if ( result ) {
 
-    //Ignore Field(0). Assume status is OK.
+  //Ignore Field(0). Assume status is OK.
 	RMB.status=NMEA0183Msg.Field(0)[0];
-    RMB.xte=atof(NMEA0183Msg.Field(1))*nmTom;
+  RMB.xte=atof(NMEA0183Msg.Field(1))*nmTom;
 	//Left is negative in NMEA2000. Right is positive.
 	if (NMEA0183Msg.Field(2)[0]=='R') RMB.xte=-RMB.xte;
     strncpy(RMB.originID,NMEA0183Msg.Field(3),sizeof(RMB.originID)/sizeof(char));
+    RMB.originID[sizeof(RMB.originID)/sizeof(char)-1]='\0';
     strncpy(RMB.destID,NMEA0183Msg.Field(4),sizeof(RMB.destID)/sizeof(char));
+    RMB.destID[sizeof(RMB.destID)/sizeof(char)-1]='\0';
     RMB.latitude=LatLonToDouble(NMEA0183Msg.Field(5),NMEA0183Msg.Field(6)[0]);
     RMB.longitude=LatLonToDouble(NMEA0183Msg.Field(7),NMEA0183Msg.Field(8)[0]);
     RMB.dtw=atof(NMEA0183Msg.Field(9))*nmTom;
@@ -197,6 +204,39 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
 
   return result;
 }
+
+//*****************************************************************************
+bool NMEA0183SetRMC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, double Longitude,
+                      double TrueCOG, double SOG, unsigned long DaysSince1970, double Variation, const char *Src) {
+                        
+  if ( SOG!=NMEA0183DoubleNA && SOG<0 ) {
+    if ( TrueCOG!=NMEA0183DoubleNA  ) TrueCOG+=pi;
+  }
+  if ( TrueCOG!=NMEA0183DoubleNA  ) TrueCOG=fmod(TrueCOG,pi);
+  
+  if ( !NMEA0183Msg.Init("RMC",Src) ) return false;
+  if ( !NMEA0183Msg.AddTimeField(GPSTime) ) return false;
+  if ( GPSTime!=NMEA0183DoubleNA ) {
+    NMEA0183Msg.AddStrField("A");
+  } else {
+    NMEA0183Msg.AddEmptyField();
+  }
+  if ( !NMEA0183Msg.AddLatitudeField(Latitude) ) return false;
+  if ( !NMEA0183Msg.AddLongitudeField(Longitude) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(SOG,msTokn) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(TrueCOG,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddDaysField(DaysSince1970) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField((Variation>=0?Variation:-Variation)) ) return false; // abs generated -0.00 for 0.00??
+  if ( Variation>=0 ) {
+    if ( !NMEA0183Msg.AddStrField("E") ) return false;
+  } else {
+    if ( !NMEA0183Msg.AddStrField("W") ) return false;
+  }
+
+  return true;
+}
+
+
 //*****************************************************************************
 // $GPVTG,89.34,T,81.84,M,0.00,N,0.01,K*24
 bool NMEA0183ParseVTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, double &MagneticCOG, double &SOG) {
@@ -213,6 +253,27 @@ bool NMEA0183ParseVTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, doubl
   }
 
   return result;
+}
+
+bool NMEA0183SetVTG(tNMEA0183Msg &NMEA0183Msg, double TrueCOG, double MagneticCOG, double SOG, const char *Src) {
+  if ( SOG!=NMEA0183DoubleNA && SOG<0 ) {
+    if ( TrueCOG!=NMEA0183DoubleNA  ) TrueCOG+=pi;
+    if ( MagneticCOG!=NMEA0183DoubleNA  ) MagneticCOG+=pi;
+  }
+  if ( TrueCOG!=NMEA0183DoubleNA  ) TrueCOG=fmod(TrueCOG,pi);
+  if ( MagneticCOG!=NMEA0183DoubleNA  ) MagneticCOG=fmod(MagneticCOG,pi);
+
+  if ( !NMEA0183Msg.Init("VTG",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(TrueCOG,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddStrField("T") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(MagneticCOG,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddStrField("M") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(SOG,msTokn) ) return false;
+  if ( !NMEA0183Msg.AddStrField("K") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(SOG,msTokmh) ) return false;
+  if ( !NMEA0183Msg.AddStrField("N") ) return false;
+  
+  return true;
 }
 
 //*****************************************************************************
@@ -266,6 +327,24 @@ bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double Magnet
 }
 
 //*****************************************************************************
+// $HEROT,4.71,A*1B
+bool NMEA0183ParseROT_nc(const tNMEA0183Msg &NMEA0183Msg,double &RateOfTurn) {
+  bool result=( NMEA0183Msg.FieldCount()>=2 );
+  if ( result ) {
+    RateOfTurn=atof(NMEA0183Msg.Field(0))*degToRad;
+  }
+
+  return result;
+}
+
+bool NMEA0183SetROT(tNMEA0183Msg &NMEA0183Msg, double RateOfTurn, const char *Src) {
+  if ( !NMEA0183Msg.Init("ROT",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(RateOfTurn,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  return true;
+}
+
+//*****************************************************************************
 // $HEHDT,244.71,T*1B
 bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   bool result=( NMEA0183Msg.FieldCount()>=2 );
@@ -274,6 +353,51 @@ bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   }
 
   return result;
+}
+
+bool NMEA0183SetHDT(tNMEA0183Msg &NMEA0183Msg, double Heading, const char *Src) {
+  if ( !NMEA0183Msg.Init("HDT",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Heading,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddStrField("T") ) return false;
+  return true;
+}
+
+//*****************************************************************************
+// $HEHDM,244.71,M*1B
+bool NMEA0183ParseHDM_nc(const tNMEA0183Msg &NMEA0183Msg,double &MagneticHeading) {
+  bool result=( NMEA0183Msg.FieldCount()>=2 );
+  if ( result ) {
+    MagneticHeading=atof(NMEA0183Msg.Field(0))*degToRad;
+  }
+
+  return result;
+}
+
+bool NMEA0183SetHDM(tNMEA0183Msg &NMEA0183Msg, double Heading, const char *Src) {
+  if ( !NMEA0183Msg.Init("HDM",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Heading,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddStrField("M") ) return false;
+  return true;
+}
+
+//*****************************************************************************
+bool NMEA0183SetHDG(tNMEA0183Msg &NMEA0183Msg, double Heading, double Deviation, double Variation, const char *Src) {
+  if ( !NMEA0183Msg.Init("HDG",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Heading,radToDeg) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField((Deviation>=0?Deviation:-Deviation),radToDeg) ) return false; // abs generated -0.00 for 0.00??
+  if ( Deviation>=0 ) {
+    if ( !NMEA0183Msg.AddStrField("E") ) return false;
+  } else {
+    if ( !NMEA0183Msg.AddStrField("W") ) return false;
+  }
+  if ( !NMEA0183Msg.AddDoubleField((Variation>=0?Variation:-Variation),radToDeg) ) return false; // abs generated -0.00 for 0.00??
+  if ( Variation>=0 ) {
+    if ( !NMEA0183Msg.AddStrField("E") ) return false;
+  } else {
+    if ( !NMEA0183Msg.AddStrField("W") ) return false;
+  }
+  
+  return true;
 }
 
 //*****************************************************************************
@@ -336,11 +460,11 @@ bool NMEA0183ParseWPL_nc(const tNMEA0183Msg &NMEA0183Msg, tWPL &wpl) {
     bool result=( NMEA0183Msg.FieldCount()>=5);
 
     if ( result ) {
-		
-		wpl.latitude = LatLonToDouble(NMEA0183Msg.Field(0),NMEA0183Msg.Field(1)[0]);
-		wpl.longitude = LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
-    strncpy(wpl.name,NMEA0183Msg.Field(4),sizeof(wpl.name)/sizeof(char));
-	 }		
+      wpl.latitude = LatLonToDouble(NMEA0183Msg.Field(0),NMEA0183Msg.Field(1)[0]);
+      wpl.longitude = LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
+      strncpy(wpl.name,NMEA0183Msg.Field(4),sizeof(wpl.name)/sizeof(char));
+      wpl.name[sizeof(wpl.name)/sizeof(char)-1]='\0';
+	  }		
     return result;
 }
 
@@ -350,10 +474,12 @@ bool NMEA0183ParseBOD_nc(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
     bool result=( NMEA0183Msg.FieldCount()>=6);
 
     if ( result ) {
-		bod.trueBearing = atof(NMEA0183Msg.Field(0))*degToRad;
-		bod.magBearing = atof(NMEA0183Msg.Field(2))*degToRad;
-    strncpy(bod.destID,NMEA0183Msg.Field(4),sizeof(bod.destID)/sizeof(char));
-    strncpy(bod.originID,NMEA0183Msg.Field(5),sizeof(bod.originID)/sizeof(char));
-	 }		
+      bod.trueBearing = atof(NMEA0183Msg.Field(0))*degToRad;
+      bod.magBearing = atof(NMEA0183Msg.Field(2))*degToRad;
+      strncpy(bod.destID,NMEA0183Msg.Field(4),sizeof(bod.destID)/sizeof(char));
+      bod.destID[sizeof(bod.destID)/sizeof(char)-1]='\0';
+      strncpy(bod.originID,NMEA0183Msg.Field(5),sizeof(bod.originID)/sizeof(char));
+      bod.originID[sizeof(bod.originID)/sizeof(char)-1]='\0';
+	  }		
     return result;
 }
