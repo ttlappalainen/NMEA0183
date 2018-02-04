@@ -26,21 +26,9 @@ Author: Timo Lappalainen
 #include <TimeLib.h>
 #include <NMEA0183Msg.h>
 
-#if !defined(NMEA0183_MAX_WP_NAME_LENGTH)
-  #define NMEA0183_MAX_WP_NAME_LENGTH 20
-#endif
-
-
-
-/*
- * A NMEA sentence can at max be 80 characters long including the $GPRTE,2,1,c,0 part, the checksum and carriage return.
- * Which leaves 62 characters for WP's, in case of single character waypoints a RTE message could at max host 31 waypoints.
- * For the sensible people that do not use single character waypoint names it can be overridden to save memory usage, but
- * use with care because it could lead to dropping waypoint names.
- */
-#if !defined(NMEA0183_MAX_WP_IN_RTE)
-	#define NMEA0183_MAX_WP_IN_RTE 31
-#endif
+#define NMEA0183_MAX_WP_NAME_LENGTH 20
+//The $GPRTE,2,1,c,0, ... *69 part takes up 18 characters. Need additional character for the null terminator of the last string.
+#define NMEA0183_RTE_WPLENGTH MAX_NMEA0183_MSG_LEN-18+1
 
 //$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
 struct tRTE {
@@ -51,8 +39,25 @@ struct tRTE {
 	//'c' = complete route list, 'w' = first listed waypoint is start of current leg
 	char type;
 	unsigned int routeID;
-	char wp[NMEA0183_MAX_WP_IN_RTE][NMEA0183_MAX_WP_NAME_LENGTH + 1];
+	//Internal list of null terminator separated waypoints
+	char _wp[NMEA0183_RTE_WPLENGTH];
 	unsigned int nrOfwp;
+
+	char* operator [](int i) const {
+		if (i > nrOfwp || i < 0) {
+			return 0; //Index out of bounds.
+		} else if (i == 0) {
+			return _wp;
+		} else {
+			byte j = 0;
+			for (byte k=0; k < NMEA0183_RTE_WPLENGTH; k++) {
+				if (_wp[k] == 0 && ++j == i) {
+					return _wp + k + 1;
+				}
+			}
+			return 0;
+		}
+	}
 };
 
 struct tGGA {
