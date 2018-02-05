@@ -137,6 +137,7 @@ bool NMEA0183ParseGGA_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
 }
 
 
+//*****************************************************************************
 //$GPGLL,5246.241,N,00506.648,E,155957,A*2B
 //$GPGLL,,,,,155648,*5B
 bool NMEA0183ParseGLL_nc(const tNMEA0183Msg &NMEA0183Msg, tGLL &GLL) {
@@ -153,6 +154,7 @@ bool NMEA0183ParseGLL_nc(const tNMEA0183Msg &NMEA0183Msg, tGLL &GLL) {
 }
 
 
+//*****************************************************************************
 //$GPRMB,A,0.15,R,WOUBRG,WETERB,5213.400,N,00438.400,E,009.4,180.2,,V*07
 bool NMEA0183ParseRMB_nc(const tNMEA0183Msg &NMEA0183Msg, tRMB &RMB) {
     
@@ -434,6 +436,7 @@ bool NMEA0183ParseVDM_nc(const tNMEA0183Msg &NMEA0183Msg,
   return result;
 }
 
+//*****************************************************************************
 //$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
 bool NMEA0183ParseRTE_nc(const tNMEA0183Msg &NMEA0183Msg, tRTE &tRTE) {
 	
@@ -459,6 +462,7 @@ bool NMEA0183ParseRTE_nc(const tNMEA0183Msg &NMEA0183Msg, tRTE &tRTE) {
     return result;
 }
 
+//*****************************************************************************
 //$GPWPL,5208.700,N,00438.600,E,MOLENB*4D
 bool NMEA0183ParseWPL_nc(const tNMEA0183Msg &NMEA0183Msg, tWPL &wpl) {
 	
@@ -473,6 +477,7 @@ bool NMEA0183ParseWPL_nc(const tNMEA0183Msg &NMEA0183Msg, tWPL &wpl) {
     return result;
 }
 
+//*****************************************************************************
 //$GPBOD,001.1,T,003.4,M,WETERB,WOUBRG*49
 bool NMEA0183ParseBOD_nc(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
 	

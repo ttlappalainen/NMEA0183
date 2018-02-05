@@ -30,7 +30,10 @@ Author: Timo Lappalainen
 //The $GPRTE,2,1,c,0, ... *69 part takes up 18 characters. Need additional character for the null terminator of the last string.
 #define NMEA0183_RTE_WPLENGTH MAX_NMEA0183_MSG_LEN-18+1
 
-//$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
+//*****************************************************************************
+//Representation of a single NMEA0183 RTE message.
+//In case of tRTE.nrOfsentences > 1 a sequence of RTE messages is needed for full data which are correlated by tRTE.routeID and ordered by tRTE.currSentence.
+//The tRTE contains a array of waypoints in the range tRTE[0] ... tRTE[tRTE.nrOfwp - 1]
 struct tRTE {
 
 	//total number of sentences needed for full data
@@ -39,7 +42,7 @@ struct tRTE {
 	//'c' = complete route list, 'w' = first listed waypoint is start of current leg
 	char type;
 	unsigned int routeID;
-	//Internal list of null terminator separated waypoints
+	//Internal list of null terminator separated waypoints. Use the [] operator to read.
 	char _wp[NMEA0183_RTE_WPLENGTH];
 	unsigned int nrOfwp;
 
@@ -135,6 +138,7 @@ struct tBOD {
 
 void NMEA0183AddChecksum(char* msg);
 
+//*****************************************************************************
 bool NMEA0183ParseGGA_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
                       int &GPSQualityIndicator, int &SatelliteCount, double &HDOP, double &Altitude, double &GeoidalSeparation,
                       double &DGPSAge, int &DGPSReferenceStationID);
@@ -153,6 +157,7 @@ inline bool NMEA0183ParseGGA(const tNMEA0183Msg &NMEA0183Msg, tGGA &gga) {
 										gga.satelliteCount,gga.HDOP,gga.altitude,gga.geoidalSeparation,gga.DGPSAge,gga.DGPSReferenceStationID);
 }
 
+//*****************************************************************************
 bool NMEA0183ParseGLL_nc(const tNMEA0183Msg &NMEA0183Msg, tGLL &gll);
 
 inline bool NMEA0183ParseGLL(const tNMEA0183Msg &NMEA0183Msg, tGLL &gll) {
@@ -161,6 +166,7 @@ inline bool NMEA0183ParseGLL(const tNMEA0183Msg &NMEA0183Msg, tGLL &gll) {
             :false);
 }
 
+//*****************************************************************************
 bool NMEA0183ParseRMB_nc(const tNMEA0183Msg &NMEA0183Msg, tRMB &rmb);
 
 inline bool NMEA0183ParseRMB(const tNMEA0183Msg &NMEA0183Msg, tRMB &rmb) {
@@ -260,6 +266,11 @@ inline bool NMEA0183ParseVDM(const tNMEA0183Msg &NMEA0183Msg, uint8_t &pkgCnt, u
 		NMEA0183ParseVDM_nc(NMEA0183Msg, pkgCnt, pkgNmb, seqMessageId, channel, length, bitstream, fillBits) : false);
 }
 
+//*****************************************************************************
+//Parse a single NMEA0183 RTE message into a tRTE struct.
+//Depending on the size of the route a GPS will send a single RTE message or send multiple RTE messages via NMEA0183.
+//This method only handles a single RTE message. Handling a sequence of RTE messages is outside of the scope of this lib.
+//This should be handled in the calling lib. An example lib which handles a sequence of RTE messages can be found here: https://github.com/tonswieb/NMEAGateway 
 //$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
 bool NMEA0183ParseRTE_nc(const tNMEA0183Msg &NMEA0183Msg, tRTE &rte);
 
@@ -268,6 +279,7 @@ inline bool NMEA0183ParseRTE(const tNMEA0183Msg &NMEA0183Msg, tRTE &rte) {
 					NMEA0183ParseRTE_nc(NMEA0183Msg,rte) : false);
 }
 
+//*****************************************************************************
 //$GPWPL,5208.700,N,00438.600,E,MOLENB*4D
 bool NMEA0183ParseWPL_nc(const tNMEA0183Msg &NMEA0183Msg, tWPL &wpl);
 
@@ -276,6 +288,7 @@ inline bool NMEA0183ParseWPL(const tNMEA0183Msg &NMEA0183Msg, tWPL &wpl) {
 					NMEA0183ParseWPL_nc(NMEA0183Msg,wpl) : false);
 }
 
+//*****************************************************************************
 bool NMEA0183ParseBOD_nc(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod);
 
 inline bool NMEA0183ParseBOD(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
