@@ -46,7 +46,7 @@ struct tRTE {
 	char _wp[NMEA0183_RTE_WPLENGTH];
 	unsigned int nrOfwp;
 
-	char* operator [](int i) const {
+	const char* operator [](unsigned int i) const {
 		if (i > nrOfwp || i < 0) {
 			return 0; //Index out of bounds.
 		} else if (i == 0) {
