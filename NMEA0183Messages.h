@@ -47,7 +47,7 @@ struct tRTE {
 	unsigned int nrOfwp;
 
 	const char* operator [](unsigned int i) const {
-		if (i > nrOfwp || i < 0) {
+		if ( i > nrOfwp ) {
 			return 0; //Index out of bounds.
 		} else if (i == 0) {
 			return _wp;
@@ -135,6 +135,13 @@ struct tBOD {
 	//Destination waypoint ID
   char destID[NMEA0183_MAX_WP_NAME_LENGTH];
 };
+
+enum tNMEA0183WindReference {
+                            NMEA0183Wind_True=0,
+                            // Apparent Wind (relative to the vessel centerline)
+                            NMEA0183Wind_Apparent=1
+                          };
+
 
 void NMEA0183AddChecksum(char* msg);
 
@@ -295,5 +302,17 @@ inline bool NMEA0183ParseBOD(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
 	return (NMEA0183Msg.IsMessageCode("BOD") ?
 					NMEA0183ParseBOD_nc(NMEA0183Msg,bod) : false);
 }
+
+//*****************************************************************************
+// MWV - Wind Speed and Angle
+bool NMEA0183ParseMWV_nc(const tNMEA0183Msg &NMEA0183Msg,double &WindAngle, tNMEA0183WindReference &Reference, double &WindSpeed); 
+
+inline bool NMEA0183ParseMWV(const tNMEA0183Msg &NMEA0183Msg,double &WindAngle, tNMEA0183WindReference &Reference, double &WindSpeed) {
+  return (NMEA0183Msg.IsMessageCode("MWV")
+            ?NMEA0183ParseMWV_nc(NMEA0183Msg,WindAngle,Reference,WindSpeed)
+            :false);
+}
+
+bool NMEA0183SetMWV(tNMEA0183Msg &NMEA0183Msg, double WindAngle, tNMEA0183WindReference Reference, double WindSpeed, const char *Src="II");
 
 #endif

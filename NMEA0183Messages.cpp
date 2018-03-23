@@ -493,3 +493,38 @@ bool NMEA0183ParseBOD_nc(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
 	  }		
     return result;
 }
+
+//*****************************************************************************
+// MWV - Wind Speed and Angle
+//$IIMWV,120.1,R,9.5,M,A,a*hh
+bool NMEA0183ParseMWV_nc(const tNMEA0183Msg &NMEA0183Msg,double &WindAngle, tNMEA0183WindReference &Reference, double &WindSpeed) {
+  bool result=( NMEA0183Msg.FieldCount()>=4 );
+  
+  if ( result ) {
+    WindAngle=atof(NMEA0183Msg.Field(0));
+    switch ( NMEA0183Msg.Field(1)[0] ) {
+      case 'T' : Reference=NMEA0183Wind_True; break;
+      case 'R' : 
+      default : Reference=NMEA0183Wind_Apparent; break;
+    }
+    WindSpeed=atof(NMEA0183Msg.Field(2));
+    switch ( NMEA0183Msg.Field(3)[0] ) {
+      case 'K' : WindSpeed*=kmhToms; break;
+      case 'N' : WindSpeed*=knToms; break;
+      case 'M' : 
+      default : ;
+    }
+  }
+
+  return result;
+}
+
+bool NMEA0183SetMWV(tNMEA0183Msg &NMEA0183Msg, double WindAngle, tNMEA0183WindReference Reference, double WindSpeed, const char *Src) {
+  if ( !NMEA0183Msg.Init("MWV",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WindAngle) ) return false;
+  if ( !NMEA0183Msg.AddStrField(Reference==NMEA0183Wind_True?"T":"R") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WindSpeed) ) return false;
+  if ( !NMEA0183Msg.AddStrField("M") ) return false;
+  if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  return true;
+}  
