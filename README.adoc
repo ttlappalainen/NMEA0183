@@ -15,11 +15,29 @@ To use this library you also need latest version of:
 * Arduino Time library http://playground.arduino.cc/code/time
 * Standard C++ library for Arduino https://github.com/maniacbug/StandardCplusplus
 
-To compile example NMEA0183ToN2k you need also NMEA2000 library https://github.com/ttlappalainen/NMEA2000
+To compile example any NMEA2000 related examples you need also NMEA2000 library https://github.com/ttlappalainen/NMEA2000
+
+*Note for Arduino DUE users!*
+
+Currently code uses availableForWrite on writing serial. You have to modify next files and add availableForWrite to them. 
+Note also that paths are version depended and here 1.6.11.
+
+"C:\Users<your username>\AppData\Local\Arduino15\packages\arduino\hardware\sam\1.6.11\cores\arduino\Print.h"
+----
+    virtual size_t write(uint8_t) = 0;
+    virtual int availableForWrite(void) = 0;
+    size_t write(const char *str) {
+----
+"C:\Users\lappalai\AppData\Local\Arduino15\packages\arduino\hardware\sam\1.6.11\cores\arduino\HardwareSerial.h"
+----
+    virtual operator bool() = 0;
+    virtual int availableForWrite(void)=0;
+----
+
 
 == License ==
 
-2015-2017 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+2015-2018 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
 
 Author: Timo Lappalainen
 

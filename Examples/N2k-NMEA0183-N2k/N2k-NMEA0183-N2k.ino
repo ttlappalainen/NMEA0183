@@ -9,7 +9,11 @@
 
  The example works with default settings on Arduino DUE, since it uses
  board second USB SerialUSB. That can be changed by definitions on the 
- beginning of code.
+ beginning of code. Note that on DUE SerialUSB blocks for some reason, when
+ you close the port on PC, so the whole program stops. It continues, when
+ you open port again. If you do not need NMEA2000 messages forwarded to PC,
+ define Serial for NMEA0183_Out_Stream and comment line:
+ #define N2kForward_Stream Serial
 
  Example reads NMEA0183 messages from one serial port. It is possible
  to add more serial ports for having NMEA0183 combiner functionality.
@@ -73,12 +77,16 @@ void FlushStreamInput(Stream &stream) {
 // *****************************************************************************
 void setup() {
   // Setup NMEA2000 system
-  N2kForward_Stream.begin(115200);
+  #ifdef N2kForward_Stream
+  N2kForward_Stream.begin(N2kForward_Stream_Speed);
+  #endif
   NMEA0183_In_Stream.begin(NMEA0183_In_Stream_Speed);
   NMEA0183_Out_Stream.begin(NMEA0183_Out_Stream_Speed);
   delay(1000); // Give some time for serial to initialize
 
+  #ifdef N2kForward_Stream
   NMEA2000.SetForwardStream(&N2kForward_Stream);
+  #endif
   NMEA2000.SetProductInformation("00000008", // Manufacturer's Model serial code
                                  107, // Manufacturer's product code
                                  "N2k->NMEA0183->N2k->PC",  // Manufacturer's Model ID
@@ -120,8 +128,10 @@ void loop() {
   NMEA0183_Out.ParseMessages();
   // We need to clear output streams input data to avoid them to get stuck.
   FlushStreamInput(NMEA0183_Out_Stream);
+  #ifdef N2kForward_Stream
   FlushStreamInput(N2kForward_Stream);
-
+  #endif
+  
   SendSystemTime();
 }
 

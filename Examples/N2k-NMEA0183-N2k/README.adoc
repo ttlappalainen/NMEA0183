@@ -13,7 +13,11 @@ To use this example you need both NMEA2000 and NMEA0183 library installed.
 
 The example works with default settings on Arduino DUE, since it uses
 board second USB SerialUSB. That can be changed by definitions on the 
-beginning of code.
+beginning of code. Note that on DUE SerialUSB blocks for some reason, when
+you close the port on PC, so the whole program stops. It continues, when
+you open port again. If you do not need NMEA2000 messages forwarded to PC,
+define Serial for NMEA0183_Out_Stream and comment line:
+#define N2kForward_Stream Serial
 
 Example reads NMEA0183 messages from one serial port. It is possible
 to add more serial ports for having NMEA0183 combiner functionality.
