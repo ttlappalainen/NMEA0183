@@ -1,31 +1,32 @@
-/* 
+/*
 NMEA0183.h
 
-2015-2017 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
 
-Author: Timo Lappalainen
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-
-  1301  USA
 */
 
 #ifndef _tNMEA0183_H_
 #define _tNMEA0183_H_
 
-#include <Arduino.h>  // Required by stream. Make similar as with NMEA2000 library
 #include <stdint.h>
+#include "NMEA0183Stream.h"
 #include "NMEA0183Msg.h"
 
 #define MAX_NMEA0183_MSG_BUF_LEN 81  // According to NMEA 3.01. Can not contain multi message as in AIS
@@ -33,7 +34,7 @@ Author: Timo Lappalainen
 class tNMEA0183
 {
   protected:
-    Stream *port;
+    tNMEA0183Stream *port;
     size_t MsgCheckSumStartPos;
     char MsgInBuf[MAX_NMEA0183_MSG_BUF_LEN];
     size_t MsgInPos;
@@ -48,18 +49,21 @@ class tNMEA0183
     void (*MsgHandler)(const tNMEA0183Msg &NMEA0183Msg);
 
     size_t MsgOutBufFreeSize() {
-      return (MsgOutReadPos<MsgOutWritePos?MsgOutBufSize-(MsgOutWritePos-MsgOutReadPos):MsgOutBufSize+MsgOutReadPos-MsgOutWritePos); 
+      return (MsgOutReadPos<MsgOutWritePos?MsgOutBufSize-(MsgOutWritePos-MsgOutReadPos):MsgOutBufSize+MsgOutReadPos-MsgOutWritePos);
     }
     bool IsOpen() const { return ( port!=0 && MsgOutBuf!=0 ); }
     bool SendBuf(const char *buf);
   public:
-    tNMEA0183(Stream *stream=0, uint8_t _SourceID=0);
-    void SetMessageStream(Stream *stream, uint8_t _SourceID=0);
+    tNMEA0183(tNMEA0183Stream *stream=0, uint8_t _SourceID=0);
+    void SetMessageStream(tNMEA0183Stream *stream, uint8_t _SourceID=0);
     bool Open();
+    #ifdef ARDUINO
     // Begin is obsolete. Use Open(...)
     void Begin(HardwareSerial *_port, uint8_t _SourceID=0, unsigned long _baud=4800);
+    #endif
     // Set size for send message buffer. Call this before Open().
     void SetSendBufferSize(size_t size);
+    // Set call back function, which will be called for new messages on ParseMessages.
     void SetMsgHandler(void (*_MsgHandler)(const tNMEA0183Msg &NMEA0183Msg)) {MsgHandler=_MsgHandler;}
     // Call this in loop to read incoming messages or empty buffered sent messages.
     // For new messages message handler will be called.
@@ -70,7 +74,7 @@ class tNMEA0183
     // Function will send message immediately of buffer it. Call ParseMessages()
     // in loop so that buffered messages will be sent.
     bool SendMessage(const tNMEA0183Msg &NMEA0183Msg);
-    
+
     // These are obsolete. Use SendMessage
     bool SendMessage(const char *buf);
     void kick();

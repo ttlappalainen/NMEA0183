@@ -1,21 +1,17 @@
-= NMEA0183 library for Arduino =
+= NMEA0183 library for Arduino, Teensy and RPi =
 
 # NMEA0183
-NMEA0183 library for Arduino
+NMEA0183 library for Arduino, Teensy and RPi
 
-Object oriented NMEA0183 library for Arduino Boards
+Object oriented NMEA0183 library for Arduino, Teensy and RPi
 
 Library gives you a e.g. easy way to make NMEA0183->NMEA2000 interface like Actisense device.
 
-Currently there are only few functions for parsing NMEA0183 messages. There are no
-functions for sending or creating NMEA0183 messages, since the the original need for the
-library was to parse message for forwarding them to the NMEA2000 bus.
+Currently there are most common NMEA0183 messages parser/create function.
 
-To use this library you also need latest version of:
-* Arduino Time library http://playground.arduino.cc/code/time
-* Standard C++ library for Arduino https://github.com/maniacbug/StandardCplusplus
-
-To compile example any NMEA2000 related examples you need also NMEA2000 library https://github.com/ttlappalainen/NMEA2000
+To compile example NMEA0183ToN2k or NMEA2000ToNMEA0183 you need also 
+NMEA2000 library https://github.com/ttlappalainen/NMEA2000 and board dependent
+driver libraries. See more on NMEA2000 library document.
 
 *Note for Arduino DUE users!*
 
@@ -37,21 +33,21 @@ Note also that paths are version depended and here 1.6.11.
 
 == License ==
 
-2015-2018 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
 
-Author: Timo Lappalainen
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-
-  1301  USA
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

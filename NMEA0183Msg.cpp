@@ -1,31 +1,59 @@
-/* 
+/*
 NMEA0183Msg.cpp
 
-2015-2017 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
 
-Author: Timo Lappalainen
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-
-  1301  USA
 */
 
 #include <math.h>
-#include <TimeLib.h>
+#ifndef ARDUINO
+#include <cstdio>
+#endif
 #include "NMEA0183Msg.h"
 
+#ifndef SECS_PER_DAY
+#define SECS_PER_DAY 86400UL
+#endif
+
+// Teensy 3.2, 3.5, 3.6
+// Arduino Mega
+// Linux
+#if !( defined(__MK20DX256__)||defined(__ATMEGA32U4__) || defined(__MK64FX512__) || defined (__MK66FX1M0__) \
+       || defined(__SAM3X8E__) \
+       || defined(__linux__)||defined(__linux)||defined(linux) \
+     )
+#define NO_PRINTF_DOUBLE_SUPPORT
+#endif
+
+#ifndef ARDUINO
+extern "C" {
+// Application execution delay. Must be implemented by application.
+extern void delay(uint32_t ms);
+
+// Current uptime in milliseconds. Must be implemented by application.
+extern uint32_t millis();
+}
+#endif
+
 const char *tNMEA0183Msg::EmptyField="";
+const char *tNMEA0183Msg::DefDoubleFormat="%.1f";
 
 //*****************************************************************************
 tNMEA0183Msg::tNMEA0183Msg() {
@@ -41,18 +69,18 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
 
   Clear();
   _MessageTime=millis();
-  
+
   if ( buf[i]!='$' &&  buf[i]!='!' ) return result; // Invalid message
   Prefix=buf[i];
   i++; // Pass start prefix
-  
+
 //  Serial.println(buf);
   // Set sender
   for (; iData<2 && buf[i]!=0; i++, iData++) {
     CheckSum^=buf[i];
     Data[iData]=buf[i];
   }
-  
+
   if (buf[i]==0) { Clear(); return result; } // Invalid message
 
   Data[iData]=0; iData++; // null termination for sender
@@ -62,7 +90,7 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
     Data[iData]=buf[i];
   }
   if (buf[i]!=',') { Clear(); return result; } // No separation after message code -> invalid message
-  
+
   // Set the data and calculate checksum. Read until '*'
   for (; buf[i]!='*' && buf[i]!=0 && iData<MAX_NMEA0183_MSG_LEN; i++, iData++) {
     CheckSum^=buf[i];
@@ -73,19 +101,19 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
       _FieldCount++;
     }
   }
-  
+
   if (buf[i]!='*') { Clear(); return false; } // No checksum -> invalid message
   Data[iData]=0; // null termination for previous field
   i++; // Pass '*';
   csMsg=(buf[i]<=57?buf[i]-48:buf[i]-55)<<4; i++;
   csMsg|=(buf[i]<=57?buf[i]-48:buf[i]-55);
-  
-  if (csMsg==CheckSum) { 
+
+  if (csMsg==CheckSum) {
     result=true;
   } else {
     Clear();
   }
-  
+
   return result;
 }
 
@@ -96,7 +124,7 @@ bool tNMEA0183Msg::Init(const char *_MessageCode, const char *_Sender, char _Pre
   size_t nMessageCode=0;
   if ( _Sender==0 && (nSender=strlen(_Sender))>7 ) return false;
   if ( _MessageCode==0 || (nMessageCode=strlen(_MessageCode))>10 ) return false;
-  
+
   Prefix=_Prefix;
   _MessageTime=millis();
   if ( _Sender!=0 && _Sender[0]!=0 && _Sender[1]!=0 ) {
@@ -109,9 +137,9 @@ bool tNMEA0183Msg::Init(const char *_MessageCode, const char *_Sender, char _Pre
   Data[2]=0;
   strcpy((Data+3),_MessageCode);
   iAddData=3+nMessageCode+1;
-  
+
   for ( int i=3; Data[i]!=0; i++ ) CheckSum^=Data[i];
-  
+
   return true;
 }
 
@@ -119,13 +147,13 @@ bool tNMEA0183Msg::Init(const char *_MessageCode, const char *_Sender, char _Pre
 bool tNMEA0183Msg::AddEmptyField() {
   if ( iAddData>=MAX_NMEA0183_MSG_LEN ||
        _FieldCount>=MAX_NMEA0183_MSG_FIELDS ) return false; // Is there room for any data
-       
+
   Data[iAddData]=0;
   CheckSum^=',';
   Fields[_FieldCount]=iAddData;   // Set start of field
   iAddData++;
   _FieldCount++;
-  
+
   return true;
 }
 
@@ -137,7 +165,7 @@ bool tNMEA0183Msg::AddStrField(const char *FieldData) {
   int i=0;
   uint8_t cs=CheckSum;
   uint8_t iAdd=iAddData;
-  
+
   Data[iAdd]=0;
   cs^=',';
   Fields[_FieldCount]=iAdd;   // Set start of field
@@ -149,7 +177,7 @@ bool tNMEA0183Msg::AddStrField(const char *FieldData) {
   }
   Data[iAdd]=0;
   if ( FieldData!=0 && FieldData[i]!=0 ) return false; // Return false, if FieldData does not fit.
-  
+
   iAddData=iAdd+1;
   _FieldCount++;
   CheckSum=cs;
@@ -157,27 +185,60 @@ bool tNMEA0183Msg::AddStrField(const char *FieldData) {
 }
 
 //*****************************************************************************
-bool tNMEA0183Msg::AddDoubleField(double val, double multiplier, const char *Format) {
-  if ( val==NMEA0183DoubleNA ) return AddEmptyField();
+bool tNMEA0183Msg::AddDoubleField(double val, double multiplier, const char *Format, const char *Unit) {
+  if ( NMEA0183IsNA(val) ) {
+    bool ret=AddEmptyField();
+    if ( Unit!=0 ) ret=AddStrField(Unit);
+    return ret;
+  }
 
   if ( iAddData>=MAX_NMEA0183_MSG_LEN ||
        _FieldCount>=MAX_NMEA0183_MSG_FIELDS ) return false; // Is there room for any data
 
   int needSize;
   uint8_t cs=CheckSum;
-  
+
   cs^=',';
   Fields[_FieldCount]=iAddData;   // Set start of field
+  #ifndef NO_PRINTF_DOUBLE_SUPPORT
   needSize=snprintf((Data+iAddData),MAX_NMEA0183_MSG_LEN-iAddData,Format,val*multiplier);
   ForceNullTermination();
-  
+  #else
+  char StrVal[20];
+  uint8_t precision=0;
+  uint8_t width=1;
+  bool Padding=false;
+  // Try to solve requested width and precision
+  char *DotPos=strchr(Format,'.');
+  if ( DotPos!=0 ) {
+    char *PrecPos=DotPos+1;
+    if ( PrecPos!=0 ) precision=atoi(PrecPos);
+    char *WidthPos=DotPos;
+    while (WidthPos>Format && (*(WidthPos-1))!='%' ) WidthPos--;
+    if ( WidthPos!=DotPos ) {
+      width=atoi(WidthPos);
+      if ( *WidthPos=='0' ) Padding=true;
+    }      
+  }
+  // Convert to string.
+  dtostrf(val*multiplier, width, precision, StrVal);
+  needSize=strlen(StrVal);
+  if ( needSize<MAX_NMEA0183_MSG_LEN-iAddData ) {
+    if ( Padding ) for ( char *s=StrVal; *s==' '; *s='0', s++);
+    strcpy((Data+iAddData),StrVal);
+  }
+  #endif
+
   if ( needSize>MAX_NMEA0183_MSG_LEN-1-iAddData ) return false;
-  
+
   for ( int i=iAddData; Data[i]!=0; i++ ) cs^=Data[i];
   iAddData+=needSize+1;
-  
+
   _FieldCount++;
   CheckSum=cs;
+
+  if ( Unit!=0 ) return AddStrField(Unit);
+
   return true;
 }
 
@@ -189,35 +250,35 @@ bool tNMEA0183Msg::AddTimeField(double GPSTime, const char *Format) {
 //*****************************************************************************
 bool tNMEA0183Msg::AddDaysField(unsigned long DaysSince1970) {
   if ( DaysSince1970==NMEA0183UInt32NA  ) return AddEmptyField();
-  
+
   return AddDoubleField(DaysToNMEA0183Date(DaysSince1970),1,"%06.0f");
 }
 
 //*****************************************************************************
 bool tNMEA0183Msg::AddLatitudeField(double Latitude, const char *Format) {
-  if ( Latitude==NMEA0183DoubleNA ) return AddEmptyField() & AddEmptyField(); 
-  
+  if ( Latitude==NMEA0183DoubleNA ) return AddEmptyField() & AddEmptyField();
+
   if ( iAddData>=MAX_NMEA0183_MSG_LEN-8 ||
        _FieldCount>=MAX_NMEA0183_MSG_FIELDS-1 ) return false; // Is there room for any data
-       
+
   if ( ! AddDoubleField(DoubleToddmm((Latitude>=0?Latitude:-Latitude)),1,Format) ) return false; // abs generated -0.00 for 0.00??
-  
+
   if ( Latitude>=0 ) return AddStrField("N");
-  
+
   return AddStrField("S");
 }
 
 //*****************************************************************************
 bool tNMEA0183Msg::AddLongitudeField(double Longitude, const char *Format) {
-  if ( Longitude==NMEA0183DoubleNA ) return AddEmptyField() & AddEmptyField(); 
-  
+  if ( Longitude==NMEA0183DoubleNA ) return AddEmptyField() & AddEmptyField();
+
   if ( iAddData>=MAX_NMEA0183_MSG_LEN-8 ||
        _FieldCount>=MAX_NMEA0183_MSG_FIELDS-1 ) return false; // Is there room for any data
-       
+
   if ( ! AddDoubleField(DoubleToddmm((Longitude>=0?Longitude:-Longitude)),1,Format) ) return false; // abs generated -0.00 for 0.00??
-  
+
   if ( Longitude>=0 ) return AddStrField("E");
-  
+
   return AddStrField("W");
 }
 
@@ -240,7 +301,7 @@ void tNMEA0183Msg::Clear() {
 //}
 
 //*****************************************************************************
-void tNMEA0183Msg::Send(Stream &port) const {
+void tNMEA0183Msg::Send(tNMEA0183Stream &port) const {
   if (FieldCount()==0) return;
   port.print(Prefix);
   port.print(Sender());
@@ -250,8 +311,10 @@ void tNMEA0183Msg::Send(Stream &port) const {
     port.print(Field(i));
   }
   port.print("*");
-  port.print(CheckSum,HEX);
-  port.print("\r\n"); 
+  char buf[7];
+  sprintf(buf,"*%02X\r\n",CheckSum);
+  port.print(buf);
+  port.print("\r\n");
 }
 
 //*****************************************************************************
@@ -275,7 +338,7 @@ unsigned int tNMEA0183Msg::FieldLen(uint8_t index) const {
 //*****************************************************************************
 double tNMEA0183Msg::GPSTimeToNMEA0183Time(double GPSTime) {
   if ( GPSTime==NMEA0183DoubleNA ) return GPSTime;
-  
+
   double intpart;
   double NMEA0183Time=0;
   GPSTime=modf(GPSTime/3600,&intpart);
@@ -285,7 +348,7 @@ double tNMEA0183Msg::GPSTimeToNMEA0183Time(double GPSTime) {
   NMEA0183Time+=GPSTime*60;
   //GPSTime=modf(GPSTime*60,&intpart);
   //NMEA0183Time+=(unsigned long)(intpart);
-  
+
   return NMEA0183Time;
 }
 
@@ -296,19 +359,53 @@ double tNMEA0183Msg::DoubleToddmm(double val) {
     val=modf(val,&intpart);
     val=intpart*100+val*60;
   }
-  
+
   return val;
+}
+
+unsigned long tNMEA0183Msg::TimeTDaysTo1970Offset=tNMEA0183Msg::CalcTimeTDaysTo1970Offset();
+
+//*****************************************************************************
+unsigned long tNMEA0183Msg::elapsedDaysSince1970(time_t dt) {
+  unsigned long days=dt/SECS_PER_DAY;
+  
+  days+=TimeTDaysTo1970Offset;
+  
+  return days;
+}
+
+//*****************************************************************************
+time_t tNMEA0183Msg::daysToTime_t(unsigned long val) {
+  val-=TimeTDaysTo1970Offset;
+  
+  return val*SECS_PER_DAY;
+}
+
+//*****************************************************************************
+unsigned long tNMEA0183Msg::CalcTimeTDaysTo1970Offset() {
+  // Need better routine. Now just guess between 1.1.1970 and 1.1.2000
+  tmElements_t tme;
+  SetYear(tme,2010);
+  SetMonth(tme,1);
+  SetDay(tme,1);
+  SetHour(tme,0);
+  SetMin(tme,0);
+  SetSec(tme,0);
+  
+  unsigned long days=makeTime(tme)/SECS_PER_DAY;
+  
+  return 14610-days;
 }
 
 //*****************************************************************************
 unsigned long tNMEA0183Msg::DaysToNMEA0183Date(unsigned long val) {
   if ( val!=NMEA0183UInt32NA  ) {
     tmElements_t tm;
-    time_t t=val*SECS_PER_DAY; //daysToTime_t((val));
+    time_t t=daysToTime_t(val);
     breakTime(t, tm);
-    val=tm.Day*10000+(tm.Month)*100+(tm.Year+1970-2000);
+    val=(unsigned long)GetDay(tm)*10000+(unsigned long)GetMonth(tm)*100+((unsigned long)GetYear(tm)-2000);
   }
-  
+
   return val;
 }
 
