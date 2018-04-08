@@ -25,7 +25,10 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <NMEA2000.h>
 
 //------------------------------------------------------------------------------
-class tN2kPosInfoToNMEA0183 : public tNMEA2000::tMsgHandler {
+class tN2kDataToNMEA0183 : public tNMEA2000::tMsgHandler {
+public:
+  using tSendNMEA0183MessageCallback=void (*)(const tNMEA0183Msg &NMEA0183Msg);
+    
 protected:
   static const unsigned long RMCPeriod=1000;
   double Latitude;
@@ -44,6 +47,7 @@ protected:
   unsigned long NextRMCSend;
 
   tNMEA0183 *pNMEA0183;
+  tSendNMEA0183MessageCallback SendNMEA0183MessageCallback;
 
 protected:
   void HandleHeading(const tN2kMsg &N2kMsg); // 127250
@@ -55,8 +59,11 @@ protected:
   void HandleGNSS(const tN2kMsg &N2kMsg); // 129029
   void SetNextRMCSend() { NextRMCSend=millis()+RMCPeriod; }
   void SendRMC();
+  void SendMessage(const tNMEA0183Msg &NMEA0183Msg);
+
 public:
-  tN2kPosInfoToNMEA0183(tNMEA2000 *_pNMEA2000, tNMEA0183 *_pNMEA0183) : tNMEA2000::tMsgHandler(0,_pNMEA2000) {
+  tN2kDataToNMEA0183(tNMEA2000 *_pNMEA2000, tNMEA0183 *_pNMEA0183) : tNMEA2000::tMsgHandler(0,_pNMEA2000) {
+    SendNMEA0183MessageCallback=0;
     pNMEA0183=_pNMEA0183;
     Latitude=N2kDoubleNA; Longitude=N2kDoubleNA; Altitude=N2kDoubleNA;
     Variation=N2kDoubleNA; Heading=N2kDoubleNA; COG=N2kDoubleNA; SOG=N2kDoubleNA;
@@ -68,6 +75,9 @@ public:
     LastPositionTime=0;
   }
   void HandleMsg(const tN2kMsg &N2kMsg);
+  void SetSendNMEA0183MessageCallback(tSendNMEA0183MessageCallback _SendNMEA0183MessageCallback) {
+    SendNMEA0183MessageCallback=_SendNMEA0183MessageCallback;
+  }
   void Update();
 };
 

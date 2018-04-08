@@ -26,7 +26,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <NMEA0183Messages.h>
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::HandleMsg(const tN2kMsg &N2kMsg) {
+void tN2kDataToNMEA0183::HandleMsg(const tN2kMsg &N2kMsg) {
   switch (N2kMsg.PGN) {
     case 127250UL: HandleHeading(N2kMsg);
     case 127258UL: HandleVariation(N2kMsg);
@@ -39,7 +39,7 @@ void tN2kPosInfoToNMEA0183::HandleMsg(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::Update() {
+void tN2kDataToNMEA0183::Update() {
   SendRMC();
   if ( LastHeadingTime+2000<millis() ) Heading=N2kDoubleNA;
   if ( LastCOGSOGTime+2000<millis() ) { COG=N2kDoubleNA; SOG=N2kDoubleNA; }
@@ -47,7 +47,13 @@ void tN2kPosInfoToNMEA0183::Update() {
 }
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::HandleHeading(const tN2kMsg &N2kMsg) {
+void tN2kDataToNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
+  if ( pNMEA0183!=0 ) pNMEA0183->SendMessage(NMEA0183Msg);
+  if ( SendNMEA0183MessageCallback!=0 ) SendNMEA0183MessageCallback(NMEA0183Msg);
+}
+
+//*****************************************************************************
+void tN2kDataToNMEA0183::HandleHeading(const tN2kMsg &N2kMsg) {
 unsigned char SID;
 tN2kHeadingReference ref;
 double _Deviation=0;
@@ -61,13 +67,13 @@ tNMEA0183Msg NMEA0183Msg;
     }
     LastHeadingTime=millis();
     if ( NMEA0183SetHDG(NMEA0183Msg,Heading,_Deviation,Variation) ) {
-      pNMEA0183->SendMessage(NMEA0183Msg);
+      SendMessage(NMEA0183Msg);
     }
   }
 }
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::HandleVariation(const tN2kMsg &N2kMsg) {
+void tN2kDataToNMEA0183::HandleVariation(const tN2kMsg &N2kMsg) {
 unsigned char SID;
 tN2kMagneticVariation Source;
 
@@ -75,7 +81,7 @@ tN2kMagneticVariation Source;
 }
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::HandleBoatSpeed(const tN2kMsg &N2kMsg) {
+void tN2kDataToNMEA0183::HandleBoatSpeed(const tN2kMsg &N2kMsg) {
 unsigned char SID;
 double WaterReferenced;
 double GroundReferenced;
@@ -85,13 +91,13 @@ tN2kSpeedWaterReferenceType SWRT;
     tNMEA0183Msg NMEA0183Msg;
     double MagneticHeading=( !N2kIsNA(Heading) && !N2kIsNA(Variation)?Heading+Variation: NMEA0183DoubleNA);
     if ( NMEA0183SetVHW(NMEA0183Msg,Heading,MagneticHeading,WaterReferenced) ) {
-      pNMEA0183->SendMessage(NMEA0183Msg);
+      SendMessage(NMEA0183Msg);
     }
   }
 }
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::HandleDepth(const tN2kMsg &N2kMsg) {
+void tN2kDataToNMEA0183::HandleDepth(const tN2kMsg &N2kMsg) {
 unsigned char SID;
 double DepthBelowTransducer;
 double Offset;
@@ -100,16 +106,16 @@ double Range;
   if ( ParseN2kWaterDepth(N2kMsg,SID,DepthBelowTransducer,Offset,Range) ) {
       tNMEA0183Msg NMEA0183Msg;
       if ( NMEA0183SetDPT(NMEA0183Msg,DepthBelowTransducer,Offset) ) {
-        pNMEA0183->SendMessage(NMEA0183Msg);
+        SendMessage(NMEA0183Msg);
       }
       if ( NMEA0183SetDBx(NMEA0183Msg,DepthBelowTransducer,Offset) ) {
-        pNMEA0183->SendMessage(NMEA0183Msg);
+        SendMessage(NMEA0183Msg);
       }
   }
 }
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::HandlePosition(const tN2kMsg &N2kMsg) {
+void tN2kDataToNMEA0183::HandlePosition(const tN2kMsg &N2kMsg) {
 
   if ( ParseN2kPGN129025(N2kMsg, Latitude, Longitude) ) {
     LastPositionTime=millis();
@@ -117,7 +123,7 @@ void tN2kPosInfoToNMEA0183::HandlePosition(const tN2kMsg &N2kMsg) {
 }
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::HandleCOGSOG(const tN2kMsg &N2kMsg) {
+void tN2kDataToNMEA0183::HandleCOGSOG(const tN2kMsg &N2kMsg) {
 unsigned char SID;
 tN2kHeadingReference HeadingReference;
 tNMEA0183Msg NMEA0183Msg;
@@ -130,13 +136,13 @@ tNMEA0183Msg NMEA0183Msg;
       if ( !N2kIsNA(Variation) ) COG-=Variation;
     }
     if ( NMEA0183SetVTG(NMEA0183Msg,COG,MCOG,SOG) ) {
-      pNMEA0183->SendMessage(NMEA0183Msg);
+      SendMessage(NMEA0183Msg);
     }
   }
 }
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::HandleGNSS(const tN2kMsg &N2kMsg) {
+void tN2kDataToNMEA0183::HandleGNSS(const tN2kMsg &N2kMsg) {
 unsigned char SID;
 tN2kGNSStype GNSStype;
 tN2kGNSSmethod GNSSmethod;
@@ -157,11 +163,11 @@ double AgeOfCorrection;
 }
 
 //*****************************************************************************
-void tN2kPosInfoToNMEA0183::SendRMC() {
+void tN2kDataToNMEA0183::SendRMC() {
     if ( NextRMCSend<=millis() && !N2kIsNA(Latitude) ) {
       tNMEA0183Msg NMEA0183Msg;
       if ( NMEA0183SetRMC(NMEA0183Msg,SecondsSinceMidnight,Latitude,Longitude,COG,SOG,DaysSince1970,Variation) ) {
-        pNMEA0183->SendMessage(NMEA0183Msg);
+        SendMessage(NMEA0183Msg);
       }
       SetNextRMCSend();
     }
