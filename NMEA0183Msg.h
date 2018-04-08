@@ -68,6 +68,7 @@ class tNMEA0183Msg
   protected:
     static unsigned long TimeTDaysTo1970Offset; // Offset for time_t to 1.1.1970. Seem to vary betweel libraries.
     static unsigned long CalcTimeTDaysTo1970Offset();
+    bool AddToBuf(const char *data, char * &buf, size_t &BufSize) const;
 
   public:
     static inline void SetYear(tmElements_t &TimeElements, int val) { TimeElements.tm_year=val-1900; } //
@@ -95,6 +96,8 @@ class tNMEA0183Msg
     tNMEA0183Msg();
     // Set message from received null terminated buffer. Returns true if checksum is OK.
     bool SetMessage(const char *buf);
+    // Get message as complete NMEA0183 format string to buffer.
+    bool GetMessage(char *MsgData, size_t BufSize) const;
     // Clear message
     void Clear();
     // Print message fields

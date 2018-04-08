@@ -141,10 +141,20 @@ bool tNMEA0183::SendMessage(const tNMEA0183Msg &NMEA0183Msg) {
 }
 
 //*****************************************************************************
+// availableForWrite does not exists on all implementations.
+bool tNMEA0183::CanSendByte() {
+  #if defined(ARDUINO_ARCH_ESP32)
+  return true;
+  #else
+  return port->availableForWrite() > 0;
+  #endif
+}
+
+//*****************************************************************************
 void tNMEA0183::kick() {
   if ( !Open() ) return;
 
-  while ( MsgOutWritePos!=MsgOutReadPos && port->availableForWrite() > 0 ) {
+  while ( MsgOutWritePos!=MsgOutReadPos && CanSendByte() ) {
     port->write(MsgOutBuf[MsgOutReadPos]);
     MsgOutReadPos=(MsgOutReadPos + 1) % MsgOutBufSize;
   }
@@ -159,7 +169,7 @@ bool tNMEA0183::SendBuf(const char *buf) {
   size_t iBuf=0;
 
   if ( MsgOutWritePos==MsgOutReadPos ) { // try to send immediately
-    for (; port->availableForWrite() > 0 && buf[iBuf]!=0; iBuf++ ) {
+    for (; CanSendByte() > 0 && buf[iBuf]!=0; iBuf++ ) {
       port->write(buf[iBuf]);
     }
   }

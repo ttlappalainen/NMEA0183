@@ -118,6 +118,37 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
 }
 
 //*****************************************************************************
+bool tNMEA0183Msg::AddToBuf(const char *data, char * &buf, size_t &BufSize) const {
+  size_t len=strlen(data);
+  
+  if ( len+1>BufSize ) return false;
+  
+  strcpy(buf,data);
+  buf+=len; BufSize-=len;
+  
+  return true;
+}
+
+//*****************************************************************************
+bool tNMEA0183Msg::GetMessage(char *MsgData, size_t BufSize) const {
+  if ( MsgData==0 || BufSize<14 ) return false;
+  
+  MsgData[0]=GetPrefix();
+  MsgData++; BufSize--;
+  AddToBuf(Sender(),MsgData,BufSize);
+  AddToBuf(MessageCode(),MsgData,BufSize);
+
+  for (int i=0; i<FieldCount(); i++) {
+    AddToBuf(",",MsgData,BufSize);
+    if ( !AddToBuf(Field(i),MsgData,BufSize) ) return false;
+  }
+  
+  if ( BufSize<5 ) return false; // Is there room for termination *xx0
+  sprintf(MsgData,"*%02X",GetCheckSum());
+  return true;
+}
+
+//*****************************************************************************
 bool tNMEA0183Msg::Init(const char *_MessageCode, const char *_Sender, char _Prefix) {
   Clear();
   size_t nSender=2;

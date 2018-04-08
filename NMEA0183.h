@@ -53,6 +53,7 @@ class tNMEA0183
     }
     bool IsOpen() const { return ( port!=0 && MsgOutBuf!=0 ); }
     bool SendBuf(const char *buf);
+    bool CanSendByte();
   public:
     tNMEA0183(tNMEA0183Stream *stream=0, uint8_t _SourceID=0);
     void SetMessageStream(tNMEA0183Stream *stream, uint8_t _SourceID=0);
