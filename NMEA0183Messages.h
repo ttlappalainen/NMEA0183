@@ -1,30 +1,36 @@
-/* 
+/*
 NMEA0183Messages.h
 
-2015-2017 Copyright (c) Kave Oy, www.kave.fi  All right reserved.
+Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
 
-Author: Timo Lappalainen
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-
-  1301  USA
 */
 
 #ifndef _tNMEA0183_MESSAGES_H_
 #define _tNMEA0183_MESSAGES_H_
-#include <TimeLib.h>
+#include <stdio.h>
+#include <time.h>
 #include <NMEA0183Msg.h>
+
+#ifndef Arduino
+typedef uint8_t byte;
+#endif
 
 #define NMEA0183_MAX_WP_NAME_LENGTH 20
 //The $GPRTE,2,1,c,0, ... *69 part takes up 18 characters. Need additional character for the null terminator of the last string.
@@ -46,8 +52,8 @@ struct tRTE {
 	char _wp[NMEA0183_RTE_WPLENGTH];
 	unsigned int nrOfwp;
 
-	char* operator [](int i) const {
-		if (i > nrOfwp || i < 0) {
+	const char* operator [](unsigned int i) const {
+		if ( i > nrOfwp ) {
 			return 0; //Index out of bounds.
 		} else if (i == 0) {
 			return _wp;
@@ -64,7 +70,7 @@ struct tRTE {
 };
 
 struct tGGA {
-	
+
 	double GPSTime;
 	double latitude;
 	double longitude;
@@ -78,7 +84,7 @@ struct tGGA {
 };
 
 struct tGLL {
-	
+
 	double GPSTime;
 	double latitude;
 	double longitude;
@@ -104,7 +110,7 @@ struct tRMB {
 };
 
 struct tRMC {
-	
+
 	//'A' = OK, 'V' = Void (warning)
 	char status;
 	double GPSTime; // Secs since midnight
@@ -136,7 +142,32 @@ struct tBOD {
   char destID[NMEA0183_MAX_WP_NAME_LENGTH];
 };
 
+enum tNMEA0183WindReference {
+                            NMEA0183Wind_True=0,
+                            // Apparent Wind (relative to the vessel centerline)
+                            NMEA0183Wind_Apparent=1
+                          };
+
+
 void NMEA0183AddChecksum(char* msg);
+
+//*****************************************************************************
+bool NMEA0183SetDBK(tNMEA0183Msg &NMEA0183Msg, double Depth, const char *Src="II");
+
+//*****************************************************************************
+bool NMEA0183SetDBS(tNMEA0183Msg &NMEA0183Msg, double Depth, const char *Src="II");
+
+//*****************************************************************************
+bool NMEA0183SetDBT(tNMEA0183Msg &NMEA0183Msg, double Depth, const char *Src="II");
+
+//*****************************************************************************
+// Set message to DBK/DBS/DBT automatically according to Offset
+bool NMEA0183SetDBx(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src="II");
+
+
+//*****************************************************************************
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src="II");
+
 
 //*****************************************************************************
 bool NMEA0183ParseGGA_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
@@ -152,7 +183,7 @@ inline bool NMEA0183ParseGGA(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, d
 }
 
 inline bool NMEA0183ParseGGA(const tNMEA0183Msg &NMEA0183Msg, tGGA &gga) {
-	
+
 	return NMEA0183ParseGGA(NMEA0183Msg,gga.GPSTime,gga.latitude,gga.longitude,gga.GPSQualityIndicator,
 										gga.satelliteCount,gga.HDOP,gga.altitude,gga.geoidalSeparation,gga.DGPSAge,gga.DGPSReferenceStationID);
 }
@@ -188,13 +219,13 @@ inline bool NMEA0183ParseRMC(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, d
 }
 
 inline bool NMEA0183ParseRMC(const tNMEA0183Msg &NMEA0183Msg, tRMC &rmc, time_t *DateTime=0) {
-	
+
 	return NMEA0183ParseRMC(NMEA0183Msg, rmc.GPSTime, rmc.latitude, rmc.longitude, rmc.trueCOG, rmc.SOG, rmc.daysSince1970, rmc.variation, DateTime);
 }
- 
+
 bool NMEA0183SetRMC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, double Longitude,
                       double TrueCOG, double SOG, unsigned long DaysSince1970, double Variation, const char *Src="GP");
- 
+
 //*****************************************************************************
 // COG will be returned be in radians
 // SOG will be returned in m/s
@@ -213,7 +244,7 @@ bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double Magnet
 
 //*****************************************************************************
 // Rate of turn will be returned be in radians
-bool NMEA0183ParseROT_nc(const tNMEA0183Msg &NMEA0183Msg,double &RateOfTurn); 
+bool NMEA0183ParseROT_nc(const tNMEA0183Msg &NMEA0183Msg,double &RateOfTurn);
 
 inline bool NMEA0183ParseROT(const tNMEA0183Msg &NMEA0183Msg, double &RateOfTurn) {
   return (NMEA0183Msg.IsMessageCode("ROT")
@@ -225,7 +256,7 @@ bool NMEA0183SetROT(tNMEA0183Msg &NMEA0183Msg, double RateOfTurn, const char *Sr
 
 //*****************************************************************************
 // Heading will be returned be in radians
-bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading); 
+bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading);
 
 inline bool NMEA0183ParseHDT(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeading) {
   return (NMEA0183Msg.IsMessageCode("HDT")
@@ -237,7 +268,7 @@ bool NMEA0183SetHDT(tNMEA0183Msg &NMEA0183Msg, double Heading, const char *Src="
 
 //*****************************************************************************
 // Heading will be returned be in radians
-bool NMEA0183ParseHDM_nc(const tNMEA0183Msg &NMEA0183Msg,double &MagneticHeading); 
+bool NMEA0183ParseHDM_nc(const tNMEA0183Msg &NMEA0183Msg,double &MagneticHeading);
 
 inline bool NMEA0183ParseHDM(const tNMEA0183Msg &NMEA0183Msg, double &MagneticHeading) {
   return (NMEA0183Msg.IsMessageCode("HDM")
@@ -270,7 +301,7 @@ inline bool NMEA0183ParseVDM(const tNMEA0183Msg &NMEA0183Msg, uint8_t &pkgCnt, u
 //Parse a single NMEA0183 RTE message into a tRTE struct.
 //Depending on the size of the route a GPS will send a single RTE message or send multiple RTE messages via NMEA0183.
 //This method only handles a single RTE message. Handling a sequence of RTE messages is outside of the scope of this lib.
-//This should be handled in the calling lib. An example lib which handles a sequence of RTE messages can be found here: https://github.com/tonswieb/NMEAGateway 
+//This should be handled in the calling lib. An example lib which handles a sequence of RTE messages can be found here: https://github.com/tonswieb/NMEAGateway
 //$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
 bool NMEA0183ParseRTE_nc(const tNMEA0183Msg &NMEA0183Msg, tRTE &rte);
 
@@ -295,5 +326,21 @@ inline bool NMEA0183ParseBOD(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
 	return (NMEA0183Msg.IsMessageCode("BOD") ?
 					NMEA0183ParseBOD_nc(NMEA0183Msg,bod) : false);
 }
+
+//*****************************************************************************
+// MWV - Wind Speed and Angle
+bool NMEA0183ParseMWV_nc(const tNMEA0183Msg &NMEA0183Msg,double &WindAngle, tNMEA0183WindReference &Reference, double &WindSpeed);
+
+inline bool NMEA0183ParseMWV(const tNMEA0183Msg &NMEA0183Msg,double &WindAngle, tNMEA0183WindReference &Reference, double &WindSpeed) {
+  return (NMEA0183Msg.IsMessageCode("MWV")
+            ?NMEA0183ParseMWV_nc(NMEA0183Msg,WindAngle,Reference,WindSpeed)
+            :false);
+}
+
+bool NMEA0183SetMWV(tNMEA0183Msg &NMEA0183Msg, double WindAngle, tNMEA0183WindReference Reference, double WindSpeed, const char *Src="II");
+
+//*****************************************************************************
+// VHW - Water speed and heading
+bool NMEA0183SetVHW(tNMEA0183Msg &NMEA0183Msg, double TrueHeading, double MagneticHeading, double BoatSpeed, const char *Src="II");
 
 #endif

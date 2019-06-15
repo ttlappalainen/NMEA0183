@@ -1,0 +1,38 @@
+= NMEA0183 -> NMEA2000 -> NMEA0183 converter =
+
+NMEA0183/NMEA2000 library. NMEA0183 -> NMEA2000 -> NMEA0183
+
+- Reads GPS messages from NMEA0183_In (Serial3) and forwards them to the N2k bus
+  and to NMEA0183_out (SerialUSB)
+
+- Also forwards all NMEA2000 bus messages to the PC (Serial)
+
+- Forwards also wind data from N2k bus to the NMEA0183_out
+
+To use this example you need both NMEA2000 and NMEA0183 library installed.
+
+The example works with default settings on Arduino DUE, since it uses
+board second USB SerialUSB. That can be changed by definitions on the 
+beginning of code. Note that on DUE SerialUSB blocks for some reason, when
+you close the port on PC, so the whole program stops. It continues, when
+you open port again. If you do not need NMEA2000 messages forwarded to PC,
+define Serial for NMEA0183_Out_Stream and comment line:
+#define N2kForward_Stream Serial
+
+Example reads NMEA0183 messages from one serial port. It is possible
+to add more serial ports for having NMEA0183 combiner functionality.
+
+The NMEA0183 messages, which will be handled has been defined on NMEA0183Handlers.cpp
+on NMEA0183Handlers variable initialization. So this does not automatically
+handle all NMEA0183 messages. If there is no handler for some message you need,
+you have to write handler for it and add it to the NMEA0183Handlers variable
+initialization. If you write new handlers, please after testing send them to me,
+so I can add them for others use.
+
+Example also reads NMEA2000 messages and forwards them to defined N2kForward_Stream
+- Serial as default.
+
+For NMEA2000 message handling and forwarding to NMEA0183_Out there is only sample 
+N2kWindDataHandler defined on N2kWindDataHandler.h. For each new handler you need 
+to create handler class for it and call NMEA2000.AttachMsgHandler(&<handler class>); 
+as for N2kWindDataHandler at end of setup()
