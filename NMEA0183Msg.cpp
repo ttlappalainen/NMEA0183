@@ -1,7 +1,7 @@
 /*
 NMEA0183Msg.cpp
 
-Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2019 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -120,19 +120,19 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
 //*****************************************************************************
 bool tNMEA0183Msg::AddToBuf(const char *data, char * &buf, size_t &BufSize) const {
   size_t len=strlen(data);
-  
+
   if ( len+1>BufSize ) return false;
-  
+
   strcpy(buf,data);
   buf+=len; BufSize-=len;
-  
+
   return true;
 }
 
 //*****************************************************************************
 bool tNMEA0183Msg::GetMessage(char *MsgData, size_t BufSize) const {
   if ( MsgData==0 || BufSize<14 ) return false;
-  
+
   MsgData[0]=GetPrefix();
   MsgData++; BufSize--;
   AddToBuf(Sender(),MsgData,BufSize);
@@ -142,7 +142,7 @@ bool tNMEA0183Msg::GetMessage(char *MsgData, size_t BufSize) const {
     AddToBuf(",",MsgData,BufSize);
     if ( !AddToBuf(Field(i),MsgData,BufSize) ) return false;
   }
-  
+
   if ( BufSize<5 ) return false; // Is there room for termination *xx0
   sprintf(MsgData,"*%02X",GetCheckSum());
   return true;
@@ -216,6 +216,31 @@ bool tNMEA0183Msg::AddStrField(const char *FieldData) {
 }
 
 //*****************************************************************************
+bool tNMEA0183Msg::AddUInt32Field(uint32_t val) {
+  if ( val==NMEA0183UInt32NA ) return AddEmptyField();
+
+  if ( iAddData>=MAX_NMEA0183_MSG_LEN ||
+       _FieldCount>=MAX_NMEA0183_MSG_FIELDS ) return false; // Is there room for any data
+
+  int needSize;
+  uint8_t cs=CheckSum;
+
+  cs^=',';
+  Fields[_FieldCount]=iAddData;   // Set start of field
+  needSize=snprintf((Data+iAddData),MAX_NMEA0183_MSG_LEN-iAddData,"%lu",(unsigned long)val);
+  ForceNullTermination();
+
+  if ( needSize>MAX_NMEA0183_MSG_LEN-1-iAddData ) return false;
+
+  for ( int i=iAddData; Data[i]!=0; i++ ) cs^=Data[i];
+  iAddData+=needSize+1;
+
+  _FieldCount++;
+  CheckSum=cs;
+  return true;
+}
+
+//*****************************************************************************
 bool tNMEA0183Msg::AddDoubleField(double val, double multiplier, const char *Format, const char *Unit) {
   if ( NMEA0183IsNA(val) ) {
     bool ret=AddEmptyField();
@@ -249,7 +274,7 @@ bool tNMEA0183Msg::AddDoubleField(double val, double multiplier, const char *For
     if ( WidthPos!=DotPos ) {
       width=atoi(WidthPos);
       if ( *WidthPos=='0' ) Padding=true;
-    }      
+    }
   }
   // Convert to string.
   dtostrf(val*multiplier, width, precision, StrVal);
@@ -341,7 +366,7 @@ void tNMEA0183Msg::Send(tNMEA0183Stream &port) const {
     port.print(",");
     port.print(Field(i));
   }
-  port.print("*");
+//  port.print("*");
   char buf[7];
   sprintf(buf,"*%02X\r\n",CheckSum);
   port.print(buf);
@@ -399,18 +424,21 @@ unsigned long tNMEA0183Msg::TimeTDaysTo1970Offset=tNMEA0183Msg::CalcTimeTDaysTo1
 //*****************************************************************************
 unsigned long tNMEA0183Msg::elapsedDaysSince1970(time_t dt) {
   unsigned long days=dt/SECS_PER_DAY;
-  
+
   days+=TimeTDaysTo1970Offset;
-  
+
   return days;
 }
 
+
+#ifndef _Time_h
 //*****************************************************************************
 time_t tNMEA0183Msg::daysToTime_t(unsigned long val) {
   val-=TimeTDaysTo1970Offset;
-  
+
   return val*SECS_PER_DAY;
 }
+#endif
 
 //*****************************************************************************
 unsigned long tNMEA0183Msg::CalcTimeTDaysTo1970Offset() {
@@ -422,9 +450,9 @@ unsigned long tNMEA0183Msg::CalcTimeTDaysTo1970Offset() {
   SetHour(tme,0);
   SetMin(tme,0);
   SetSec(tme,0);
-  
+
   unsigned long days=makeTime(tme)/SECS_PER_DAY;
-  
+
   return 14610-days;
 }
 
@@ -432,11 +460,14 @@ unsigned long tNMEA0183Msg::CalcTimeTDaysTo1970Offset() {
 unsigned long tNMEA0183Msg::DaysToNMEA0183Date(unsigned long val) {
   if ( val!=NMEA0183UInt32NA  ) {
     tmElements_t tm;
+    #ifndef _Time_h
     time_t t=daysToTime_t(val);
+    #else
+    time_t t=val*86400;
+    #endif
     breakTime(t, tm);
     val=(unsigned long)GetDay(tm)*10000+(unsigned long)GetMonth(tm)*100+((unsigned long)GetYear(tm)-2000);
   }
 
   return val;
 }
-
