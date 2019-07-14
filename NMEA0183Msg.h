@@ -1,7 +1,7 @@
 /*
 NMEA0183Msg.h
 
-Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2019 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -48,7 +48,9 @@ inline bool NMEA0183IsNA(int32_t v) { return v==NMEA0183Int32NA; }
 #define MAX_NMEA0183_MSG_LEN 81  // According to NMEA 3.01. Can not contain multi message as in AIS
 #define MAX_NMEA0183_MSG_FIELDS 20
 
+#ifndef _Time_h
 typedef tm tmElements_t;
+#endif
 
 //------------------------------------------------------------------------------
 class tNMEA0183Msg
@@ -63,7 +65,7 @@ class tNMEA0183Msg
     uint8_t _FieldCount;
     uint8_t CheckSum;
 
-    
+
 // Helper functions on converting TimeLib.h to time.h
   protected:
     static unsigned long TimeTDaysTo1970Offset; // Offset for time_t to 1.1.1970. Seem to vary betweel libraries.
@@ -71,6 +73,19 @@ class tNMEA0183Msg
     bool AddToBuf(const char *data, char * &buf, size_t &BufSize) const;
 
   public:
+    #ifdef _Time_h
+    static inline void SetYear(tmElements_t &TimeElements, int val) { TimeElements.Year=val-1970; } //
+    static inline void SetMonth(tmElements_t &TimeElements, int val) { TimeElements.Month=val>0?val-1:val; }
+    static inline void SetDay(tmElements_t &TimeElements, int val) { TimeElements.Day=val; }
+    static inline void SetHour(tmElements_t &TimeElements, int val) { TimeElements.Hour=val; }
+    static inline void SetMin(tmElements_t &TimeElements, int val) { TimeElements.Minute=val; }
+    static inline void SetSec(tmElements_t &TimeElements, int val) { TimeElements.Second=val; }
+    static inline int GetYear(const tmElements_t &TimeElements) { return TimeElements.Year+1970; }
+    static inline int GetMonth(const tmElements_t &TimeElements) { return TimeElements.Month+1; }
+    static inline int GetDay(const tmElements_t &TimeElements) { return TimeElements.Day; }
+    static inline time_t makeTime(tmElements_t &TimeElements) { return ::makeTime(TimeElements); }
+    static inline void breakTime(time_t time, tmElements_t &TimeElements) { ::breakTime(time,TimeElements); }
+    #else
     static inline void SetYear(tmElements_t &TimeElements, int val) { TimeElements.tm_year=val-1900; } //
     static inline void SetMonth(tmElements_t &TimeElements, int val) { TimeElements.tm_mon=val>0?val-1:val; }
     static inline void SetDay(tmElements_t &TimeElements, int val) { TimeElements.tm_mday=val; }
@@ -82,8 +97,9 @@ class tNMEA0183Msg
     static inline int GetDay(const tmElements_t &TimeElements) { return TimeElements.tm_mday; }
     static inline time_t makeTime(tmElements_t &TimeElements) { return mktime(&TimeElements); }
     static inline void breakTime(time_t time, tmElements_t &TimeElements) { TimeElements=*localtime(&time); }
-    static unsigned long elapsedDaysSince1970(time_t dt);
     static time_t daysToTime_t(unsigned long val);
+    #endif
+    static unsigned long elapsedDaysSince1970(time_t dt);
 
   protected:
     void ForceNullTermination() { Data[MAX_NMEA0183_MSG_LEN-1]=0; } // Just force null termination for data
@@ -124,41 +140,44 @@ class tNMEA0183Msg
 
     // Init message building.
     bool Init(const char *_MessageCode, const char *_Sender="II", char _Prefix='$');
+
     // Add field with no data. Causes ,, in final message.
-    
     bool AddEmptyField();
+
     // Add string field. E.g. AddStrField("K") causes ,K, on final message.
-    
     bool AddStrField(const char *FieldData);
+
+    //
+    bool AddUInt32Field(uint32_t val);
+
     // Add double field. val must be in SI units (as in NMEA2000). Provide multiplier for conversion and
     // Format (default %.1f), if necessary. If you also provide Unit, it will be added as own field.
     // Note also that function tests is value valid and adds empty field, if it is not.
     // Examples:
     // NMEA0183Msg.AddDoubleField(120.123,radToDeg,tNMEA0183Msg::DefDoubleFormat,"M"); -> ,120.1,M
     // NMEA0183Msg.AddDoubleField(23.123); -> ,23.1
-    
     bool AddDoubleField(double val, double multiplier=1, const char *Format=DefDoubleFormat, const char *Unit=0);
+
     // Add time field. GPSTime is just seconds since midnight.
-    
     bool AddTimeField(double GPSTime, const char *Format="%09.2f");
+
     // Add Days field.
-    
     bool AddDaysField(unsigned long DaysSince1970);
+
     // Add Latitude field. Also E/W will be added. Latitude is in degrees. Negative value is W. E.g.
     // AddLatitudeField(-5.2345); -> ,5.235,W
-    
     bool AddLatitudeField(double Latitude, const char *Format="%.3f");
-    
+
     // Add Longitude field. Also N/S will be added. Longitude is in degrees. Negative value is S. E.g.
     // AddLongitudeField(-5.2345); -> ,514.070,S
     bool AddLongitudeField(double Longitude, const char *Format="%.3f");
 
     // Helper function to convert GPSTime to NMEA0183 time (hhmmss.sss). E.g. 42000.55 -> 114000.55
     static double GPSTimeToNMEA0183Time(double GPSTime);
-    
+
     // Helper function to convert double angle to ddmm.zzz format. E.g. 5.2345 -> 514.070
     static double DoubleToddmm(double val);
-    
+
     // Helper function to convert days since 1970 to ddmmyyyy.
     static unsigned long DaysToNMEA0183Date(unsigned long val);
 };

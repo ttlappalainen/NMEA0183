@@ -1,7 +1,7 @@
 /*
 NMEA0183Messages.h
 
-Copyright (c) 2015-2018 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2019 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -189,6 +189,12 @@ inline bool NMEA0183ParseGGA(const tNMEA0183Msg &NMEA0183Msg, tGGA &gga) {
 }
 
 //*****************************************************************************
+bool NMEA0183SetGGA(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, double Longitude,
+          	uint32_t GPSQualityIndicator, uint32_t SatelliteCount, double HDOP, double Altitude, double GeoidalSeparation,
+	          double DGPSAge, uint32_t DGPSReferenceStationID, const char *Src="GP");
+
+
+//*****************************************************************************
 bool NMEA0183ParseGLL_nc(const tNMEA0183Msg &NMEA0183Msg, tGLL &gll);
 
 inline bool NMEA0183ParseGLL(const tNMEA0183Msg &NMEA0183Msg, tGLL &gll) {
@@ -241,6 +247,19 @@ bool NMEA0183SetVTG(tNMEA0183Msg &NMEA0183Msg, double TrueCOG, double MagneticCO
 
 // This is obsolet. Use NMEA0183SetVTG
 bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double MagneticCOG, double SOG);
+
+//*****************************************************************************
+// TrueHeading,MagneticHeading will be returned be in radians
+// SOW will be returned in m/s
+bool NMEA0183ParseVHW_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeading, double &MagneticHeading, double &SOW);
+
+inline bool NMEA0183ParseVHW(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeading, double &MagneticHeading, double &SOW) {
+  return (NMEA0183Msg.IsMessageCode("VHW")
+            ?NMEA0183ParseVHW_nc(NMEA0183Msg,TrueHeading,MagneticHeading,SOW)
+            :false);
+}
+
+bool NMEA0183SetVHW(tNMEA0183Msg &NMEA0183Msg, double TrueHeading, double MagneticHeading, double SOW, const char *Src="VW");
 
 //*****************************************************************************
 // Rate of turn will be returned be in radians
@@ -338,9 +357,5 @@ inline bool NMEA0183ParseMWV(const tNMEA0183Msg &NMEA0183Msg,double &WindAngle, 
 }
 
 bool NMEA0183SetMWV(tNMEA0183Msg &NMEA0183Msg, double WindAngle, tNMEA0183WindReference Reference, double WindSpeed, const char *Src="II");
-
-//*****************************************************************************
-// VHW - Water speed and heading
-bool NMEA0183SetVHW(tNMEA0183Msg &NMEA0183Msg, double TrueHeading, double MagneticHeading, double BoatSpeed, const char *Src="II");
 
 #endif
