@@ -259,7 +259,7 @@ bool NMEA0183SetGLL(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, 
   if ( !NMEA0183Msg.AddLatitudeField(Latitude) ) return false;
   if ( !NMEA0183Msg.AddLongitudeField(Longitude) ) return false;
   if ( !NMEA0183Msg.AddTimeField(GPSTime) ) return false;
-  if ( GPSTime!=NMEA0183DoubleNA && Latitud!=NMEA0183DoubleNA && Longitude!=NMEA0183DoubleNA ) {
+  if ( GPSTime!=NMEA0183DoubleNA && Latitude!=NMEA0183DoubleNA && Longitude!=NMEA0183DoubleNA ) {
 	//Data Active
 	if ( !NMEA0183Msg.AddStrField("A") ) return false;
   } else {
