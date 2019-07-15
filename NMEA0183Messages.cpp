@@ -252,6 +252,23 @@ bool NMEA0183ParseGLL_nc(const tNMEA0183Msg &NMEA0183Msg, tGLL &GLL) {
   return result;
 }
 
+//*****************************************************************************
+bool NMEA0183SetGLL(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, double Longitude, const char *Src) {
+
+  if ( !NMEA0183Msg.Init("GLL",Src) ) return false;
+  if ( !NMEA0183Msg.AddLatitudeField(Latitude) ) return false;
+  if ( !NMEA0183Msg.AddLongitudeField(Longitude) ) return false;
+  if ( !NMEA0183Msg.AddTimeField(GPSTime) ) return false;
+  if ( GPSTime!=NMEA0183DoubleNA && Latitude!=NMEA0183DoubleNA && Longitude!=NMEA0183DoubleNA ) {
+	//Data Active
+	if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  } else {
+	//Data Void (invalid)
+	if ( !NMEA0183Msg.AddStrField("V") ) return false;
+  }
+  return true;
+}
+
 
 //*****************************************************************************
 //$GPRMB,A,0.15,R,WOUBRG,WETERB,5213.400,N,00438.400,E,009.4,180.2,,V*07
