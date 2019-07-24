@@ -122,6 +122,15 @@ struct tRMC {
 	double variation;
 };
 
+struct tWDC {
+	double dtw;
+  char destID[NMEA0183_MAX_WP_NAME_LENGTH];
+};
+
+struct tWDR {
+	double dtw;
+  char destID[NMEA0183_MAX_WP_NAME_LENGTH];
+};
 
 struct tWPL {
 
@@ -142,12 +151,21 @@ struct tBOD {
   char destID[NMEA0183_MAX_WP_NAME_LENGTH];
 };
 
+struct tZTG {
+	double GPSTime;
+	double ETA;
+  char destID[NMEA0183_MAX_WP_NAME_LENGTH];
+};
+
 enum tNMEA0183WindReference {
                             NMEA0183Wind_True=0,
                             // Apparent Wind (relative to the vessel centerline)
                             NMEA0183Wind_Apparent=1
                           };
 
+const char NMEA0183RDO_NoDirectionOrder='\0';
+const char NMEA0183RDO_MoveToStarboard='R';
+const char NMEA0183RDO_MoveToPort='L';
 
 void NMEA0183AddChecksum(char* msg);
 
@@ -360,5 +378,222 @@ inline bool NMEA0183ParseMWV(const tNMEA0183Msg &NMEA0183Msg,double &WindAngle, 
 }
 
 bool NMEA0183SetMWV(tNMEA0183Msg &NMEA0183Msg, double WindAngle, tNMEA0183WindReference Reference, double WindSpeed, const char *Src="II");
+
+//*****************************************************************************
+// AAM - Waypoint Arrival Alarm
+bool NMEA0183ParseAAM_nc(const tNMEA0183Msg &NMEA0183Msg, char &ArrivalCircleEntered, char &PerpendicularCrossed, double &arrivalRadius, char destID[NMEA0183_MAX_WP_NAME_LENGTH]);
+
+inline bool NMEA0183ParseAAM(const tNMEA0183Msg &NMEA0183Msg, char &ArrivalCircleEntered, char &PerpendicularCrossed, double &arrivalRadius, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  return (NMEA0183Msg.IsMessageCode("AAM")
+            ?NMEA0183ParseAAM_nc(NMEA0183Msg, ArrivalCircleEntered, PerpendicularCrossed, arrivalRadius, destID)
+            :false);
+}
+
+bool NMEA0183SetAAM(tNMEA0183Msg &NMEA0183Msg, char ArrivalCircleEntered, char PerpendicularCrossed, double arrivalRadius, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src="GP");
+
+//*****************************************************************************
+// APA - Autopilot Sentence "A"             Deprecated
+bool NMEA0183ParseAPA_nc(const tNMEA0183Msg &NMEA0183Msg, double &xte, char &RudderDirectionOrder, char &ArrivalCircleEntered, char &PerpendicularCrossed, double &bearingFromOrigin, char &bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH]);
+
+inline bool NMEA0183ParseAPA(const tNMEA0183Msg &NMEA0183Msg, double &xte, char &RudderDirectionOrder, char &ArrivalCircleEntered, char &PerpendicularCrossed, double &bearingFromOrigin, char &bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  return (NMEA0183Msg.IsMessageCode("APA")
+            ?NMEA0183ParseAPA_nc(NMEA0183Msg, xte, RudderDirectionOrder, ArrivalCircleEntered, PerpendicularCrossed, bearingFromOrigin, bearingFromOriginFlag, destID)
+            :false);
+}
+
+bool NMEA0183SetAPA(tNMEA0183Msg &NMEA0183Msg, double xte, char RudderDirectionOrder, char ArrivalCircleEntered, char PerpendicularCrossed, double bearingFromOrigin, char bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src="GP");
+
+//*****************************************************************************
+// APB - Autopilot Sentence "B"             Deprecated
+bool NMEA0183ParseAPB_nc(const tNMEA0183Msg &NMEA0183Msg, double &xte, char &RudderDirectionOrder, char &ArrivalCircleEntered, char &PerpendicularCrossed, double &bearingFromOrigin, char &bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH], double &bearingToDestination, char &bearingToDestinationFlag, double &headingToDestination, char &headingToDestinationFlag);
+
+inline bool NMEA0183ParseAPB(const tNMEA0183Msg &NMEA0183Msg, double &xte, char &RudderDirectionOrder, char &ArrivalCircleEntered, char &PerpendicularCrossed, double &bearingFromOrigin, char &bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH], double &bearingToDestination, char &bearingToDestinationFlag, double &headingToDestination, char &headingToDestinationFlag) {
+  return (NMEA0183Msg.IsMessageCode("APB")
+            ?NMEA0183ParseAPB_nc(NMEA0183Msg, xte, RudderDirectionOrder, ArrivalCircleEntered, PerpendicularCrossed, bearingFromOrigin, bearingFromOriginFlag, destID, bearingToDestination, bearingToDestinationFlag, headingToDestination, headingToDestinationFlag)
+            :false);
+}
+
+bool NMEA0183SetAPB(tNMEA0183Msg &NMEA0183Msg, double xte, char RudderDirectionOrder, char ArrivalCircleEntered, char PerpendicularCrossed, double bearingFromOrigin, char bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH], double bearingToDestination, char bearingToDestinationFlag, double headingToDestination, char headingToDestinationFlag, const char *Src="GP");
+
+//*****************************************************************************
+// BWC - Bearing & Distance to Waypoint using a Great Circle route.
+bool NMEA0183ParseBWC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &latitude, double &longitude, double &trueBearing, double &magBearing, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]);
+
+inline bool NMEA0183ParseBWC(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &latitude, double &longitude, double &trueBearing, double &magBearing, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  return (NMEA0183Msg.IsMessageCode("BWC")
+            ?NMEA0183ParseBWC_nc(NMEA0183Msg, GPSTime, latitude, longitude, trueBearing, magBearing, dtw, destID)
+            :false);
+}
+
+bool NMEA0183SetBWC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double latitude, double longitude, double trueBearing, double magBearing, double dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src="GP");
+
+//*****************************************************************************
+// BWR - Bearing & Distance to Waypoint using a Rhumb Line route.
+bool NMEA0183ParseBWR_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &latitude, double &longitude, double &trueBearing, double &magBearing, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]);
+
+inline bool NMEA0183ParseBWR(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &latitude, double &longitude, double &trueBearing, double &magBearing, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  return (NMEA0183Msg.IsMessageCode("BWR")
+            ?NMEA0183ParseBWR_nc(NMEA0183Msg, GPSTime, latitude, longitude, trueBearing, magBearing, dtw, destID)
+            :false);
+}
+
+bool NMEA0183SetBWR(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double latitude, double longitude, double trueBearing, double magBearing, double dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src="GP");
+
+//*****************************************************************************
+bool NMEA0183ParseDBK_nc(const tNMEA0183Msg &NMEA0183Msg, double &Depth);
+
+inline bool NMEA0183ParseDBK(const tNMEA0183Msg &NMEA0183Msg, double &Depth) {
+  return (NMEA0183Msg.IsMessageCode("DBK")
+            ?NMEA0183ParseDBK_nc(NMEA0183Msg,Depth)
+            :false);
+}
+
+//*****************************************************************************
+bool NMEA0183ParseDBT_nc(const tNMEA0183Msg &NMEA0183Msg, double &Depth);
+
+inline bool NMEA0183ParseDBT(const tNMEA0183Msg &NMEA0183Msg, double &Depth) {
+  return (NMEA0183Msg.IsMessageCode("DBT")
+            ?NMEA0183ParseDBT_nc(NMEA0183Msg,Depth)
+            :false);
+}
+
+//*****************************************************************************
+// Heading will be returned be in radians
+bool NMEA0183ParseHDG_nc(const tNMEA0183Msg &NMEA0183Msg, double &MagneticHeading, double &Deviation, double &Variation);
+
+inline bool NMEA0183ParseHDG(const tNMEA0183Msg &NMEA0183Msg, double &MagneticHeading, double &Deviation, double &Variation) {
+  return (NMEA0183Msg.IsMessageCode("HDG")
+            ?NMEA0183ParseHDG_nc(NMEA0183Msg,MagneticHeading,Deviation,Variation)
+            :false);
+}
+
+//*****************************************************************************
+// HSC - Heading Steering Command
+bool NMEA0183ParseHSC_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeading, double &MagneticHeading);
+
+inline bool NMEA0183ParseHSC(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeading, double &MagneticHeading) {
+  return (NMEA0183Msg.IsMessageCode("HSC")
+            ?NMEA0183ParseHSC_nc(NMEA0183Msg, TrueHeading, MagneticHeading)
+            :false);
+}
+
+bool NMEA0183SetHSC(tNMEA0183Msg &NMEA0183Msg, double TrueHeading, double MagneticHeading, const char *Src="GP");
+
+//*****************************************************************************
+// MTW - Water Temperature
+bool NMEA0183SetMTW(tNMEA0183Msg &NMEA0183Msg, double WaterTemperature, const char *Src="II");
+
+bool NMEA0183ParseMTW_nc(const tNMEA0183Msg &NMEA0183Msg, double &WaterTemperature);
+
+inline bool NMEA0183ParseMTW(const tNMEA0183Msg &NMEA0183Msg, double &WaterTemperature) {
+  return (NMEA0183Msg.IsMessageCode("MTW")
+            ?NMEA0183ParseMTW_nc(NMEA0183Msg,WaterTemperature)
+            :false);
+}
+
+//*****************************************************************************
+bool NMEA0183SetRMB(tNMEA0183Msg &NMEA0183Msg, tRMB RMB, const char *Src="GP");
+
+//*****************************************************************************
+// RSA - Rudder Sensor Angle
+bool NMEA0183ParseRSA_nc(const tNMEA0183Msg &NMEA0183Msg, double &RudderSensor1, double &RudderSensor2);
+
+inline bool NMEA0183ParseRSA(const tNMEA0183Msg &NMEA0183Msg, double &RudderSensor1, double &RudderSensor2) {
+  return (NMEA0183Msg.IsMessageCode("RSA")
+            ?NMEA0183ParseRSA_nc(NMEA0183Msg,RudderSensor1,RudderSensor2)
+            :false);
+}
+
+bool NMEA0183SetRSA(tNMEA0183Msg &NMEA0183Msg, double RudderSensor1, double RudderSensor2, const char *Src="II");
+
+//*****************************************************************************
+// VLW - Water LOG
+bool NMEA0183SetVLW(tNMEA0183Msg &NMEA0183Msg, double LOGtotal, double LOGtrip, const char *Src="II");
+
+bool NMEA0183ParseVLW_nc(const tNMEA0183Msg &NMEA0183Msg, double &LOGtotal, double &LOGtrip);
+
+inline bool NMEA0183ParseVLW(const tNMEA0183Msg &NMEA0183Msg, double &LOGtotal, double &LOGtrip) {
+  return (NMEA0183Msg.IsMessageCode("VLW")
+            ?NMEA0183ParseVLW_nc(NMEA0183Msg,LOGtotal,LOGtrip)
+            :false);
+}
+
+//*****************************************************************************
+// VWR - Apparent Wind Speed and Angle    Deprecated
+bool NMEA0183ParseVWR_nc(const tNMEA0183Msg &NMEA0183Msg, double &WindAngle, double &WindSpeed);
+
+inline bool NMEA0183ParseVWR(const tNMEA0183Msg &NMEA0183Msg, double &WindAngle, double &WindSpeed) {
+  return (NMEA0183Msg.IsMessageCode("VWR")
+            ?NMEA0183ParseVWR_nc(NMEA0183Msg,WindAngle,WindSpeed)
+            :false);
+}
+
+bool NMEA0183SetVWR(tNMEA0183Msg &NMEA0183Msg, double WindAngle, double WindSpeed, const char *Src="II");
+
+//*****************************************************************************
+// WDC - Distance to Waypoint - Great Circle     Deprecated
+bool NMEA0183ParseWDC_nc(const tNMEA0183Msg &NMEA0183Msg, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]);
+
+inline bool NMEA0183ParseWDC(const tNMEA0183Msg &NMEA0183Msg, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  return (NMEA0183Msg.IsMessageCode("WDC")
+            ?NMEA0183ParseWDC_nc(NMEA0183Msg, dtw, destID)
+            :false);
+}
+
+inline bool NMEA0183ParseWDC(const tNMEA0183Msg &NMEA0183Msg, tWDC &wdc) {
+
+	return NMEA0183ParseWDC(NMEA0183Msg, wdc.dtw, wdc.destID);
+}
+
+bool NMEA0183SetWDC(tNMEA0183Msg &NMEA0183Msg, double dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src="GP");
+
+//*****************************************************************************
+// WDR - Distance to Waypoint - Rhumb Line       Deprecated
+bool NMEA0183ParseWDR_nc(const tNMEA0183Msg &NMEA0183Msg, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]);
+
+inline bool NMEA0183ParseWDR(const tNMEA0183Msg &NMEA0183Msg, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  return (NMEA0183Msg.IsMessageCode("WDR")
+            ?NMEA0183ParseWDR_nc(NMEA0183Msg, dtw, destID)
+            :false);
+}
+
+inline bool NMEA0183ParseWDR(const tNMEA0183Msg &NMEA0183Msg, tWDR &wdr) {
+
+	return NMEA0183ParseWDR(NMEA0183Msg, wdr.dtw, wdr.destID);
+}
+
+bool NMEA0183SetWDR(tNMEA0183Msg &NMEA0183Msg, double dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src="GP");
+
+//*****************************************************************************
+bool NMEA0183SetWPL(tNMEA0183Msg &NMEA0183Msg, double latitude, double longitude, char name[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src="GP");
+
+//*****************************************************************************
+// XTE - Cross-Track Error, Measured
+bool NMEA0183ParseXTE_nc(const tNMEA0183Msg &NMEA0183Msg, double &xte, char &RudderDirectionOrder);
+
+inline bool NMEA0183ParseXTE(const tNMEA0183Msg &NMEA0183Msg, double &xte, char &RudderDirectionOrder) {
+  return (NMEA0183Msg.IsMessageCode("XTE")
+            ?NMEA0183ParseXTE_nc(NMEA0183Msg, xte, RudderDirectionOrder)
+            :false);
+}
+
+bool NMEA0183SetXTE(tNMEA0183Msg &NMEA0183Msg, double xte, char RudderDirectionOrder, const char *Src="GP");
+
+//*****************************************************************************
+// ZTG - UTC & Time to Destination Waypoint
+bool NMEA0183ParseZTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &ETA, char destID[NMEA0183_MAX_WP_NAME_LENGTH]);
+
+inline bool NMEA0183ParseZTG(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &ETA, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  return (NMEA0183Msg.IsMessageCode("ZTG")
+            ?NMEA0183ParseZTG_nc(NMEA0183Msg, GPSTime, ETA, destID)
+            :false);
+}
+
+inline bool NMEA0183ParseZTG(const tNMEA0183Msg &NMEA0183Msg, tZTG &ztg) {
+
+	return NMEA0183ParseZTG(NMEA0183Msg, ztg.GPSTime, ztg.ETA, ztg.destID);
+}
+
+bool NMEA0183SetZTG(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double ETA, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src="GP");
 
 #endif

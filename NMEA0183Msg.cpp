@@ -54,6 +54,9 @@ extern uint32_t millis();
 
 const char *tNMEA0183Msg::EmptyField="";
 const char *tNMEA0183Msg::DefDoubleFormat="%.1f";
+const char *tNMEA0183Msg::DefDouble2Format="%.2f";
+const char *tNMEA0183Msg::DefIntFormat="%i";
+const char *tNMEA0183Msg::DefInt3Format="%03.0f";
 
 //*****************************************************************************
 tNMEA0183Msg::tNMEA0183Msg() {
@@ -61,7 +64,7 @@ tNMEA0183Msg::tNMEA0183Msg() {
 }
 
 //*****************************************************************************
-bool tNMEA0183Msg::SetMessage(const char *buf) {
+bool tNMEA0183Msg::SetMessage(const char *buf, bool checksumCheck) {
   unsigned char csMsg;
   int i=0;
   uint8_t iData=0;
@@ -102,17 +105,18 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
     }
   }
 
-  if (buf[i]!='*') { Clear(); return false; } // No checksum -> invalid message
+  if (checksumCheck && buf[i]!='*') { Clear(); return false; } // If message should contain checksum but doesn't -> invalid message
   Data[iData]=0; // null termination for previous field
   i++; // Pass '*';
-  csMsg=(buf[i]<=57?buf[i]-48:buf[i]-55)<<4; i++;
-  csMsg|=(buf[i]<=57?buf[i]-48:buf[i]-55);
-
-  if (csMsg==CheckSum) {
-    result=true;
-  } else {
-    Clear();
-  }
+  if (checksumCheck) {
+    csMsg=(buf[i]<=57?buf[i]-48:buf[i]-55)<<4; i++;
+    csMsg|=(buf[i]<=57?buf[i]-48:buf[i]-55);
+    if (csMsg==CheckSum) {
+      result=true;
+    } else {
+      Clear();
+    }
+  } else { result=true; }
 
   return result;
 }

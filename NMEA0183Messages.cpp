@@ -36,6 +36,7 @@ const double radToDeg=180.0/pi;
 const double msTokmh=3600.0/1000.0;
 const double msTokn=3600.0/1852.0;
 const double nmTom=1.852*1000;
+const double mTonm=1/nmTom;
 const double mToFathoms=0.546806649;
 const double mToFeet=3.2808398950131;
 
@@ -209,8 +210,8 @@ bool NMEA0183ParseGGA_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
     // Check units of antenna altitude NMEA0183Msg.Field(9)
     GeoidalSeparation=atof(NMEA0183Msg.Field(10));
     // Check units of GeoidalSeparation NMEA0183Msg.Field(11)
-    DGPSAge=atof(NMEA0183Msg.Field(12));
-    DGPSReferenceStationID=atoi(NMEA0183Msg.Field(13));
+    if (strlen(NMEA0183Msg.Field(12)) != 0) { DGPSAge=atof(NMEA0183Msg.Field(12)); } else { DGPSAge = NMEA0183DoubleNA; }
+    if (strlen(NMEA0183Msg.Field(13)) != 0) { DGPSReferenceStationID=atoi(NMEA0183Msg.Field(13)); } else { DGPSReferenceStationID = NMEA0183Int16NA; }
   }
 
   return result;
@@ -228,8 +229,8 @@ bool NMEA0183SetGGA(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, 
   if ( !NMEA0183Msg.AddUInt32Field(GPSQualityIndicator) ) return false;
   if ( !NMEA0183Msg.AddUInt32Field(SatelliteCount) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(HDOP) ) return false;
-  if ( !NMEA0183Msg.AddDoubleField(Altitude) ) return false;
-  if ( !NMEA0183Msg.AddDoubleField(GeoidalSeparation) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Altitude,1,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(GeoidalSeparation,1,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
   if ( !NMEA0183Msg.AddDoubleField(DGPSAge) ) return false;
   if ( !NMEA0183Msg.AddUInt32Field(DGPSReferenceStationID) ) return false;
 
@@ -299,9 +300,30 @@ bool NMEA0183ParseRMB_nc(const tNMEA0183Msg &NMEA0183Msg, tRMB &RMB) {
 
 }
 
+//May need more formatting (Autopilots may decode by position, so fixed field length/no empty fields)
+bool NMEA0183SetRMB(tNMEA0183Msg &NMEA0183Msg, tRMB RMB, const char *Src) {
+  if ( !NMEA0183Msg.Init("RMB",Src) ) return false;
+  if ( !NMEA0183Msg.AddStrField(RMB.status != 'A' ? "V" : "A") ) return false;
+  if (RMB.xte < 0) {
+    if ( !NMEA0183Msg.AddDoubleField(RMB.xte,-1*mTonm,tNMEA0183Msg::DefDouble2Format,"R") ) return false;
+  } else {
+    if ( !NMEA0183Msg.AddDoubleField(RMB.xte,mTonm,tNMEA0183Msg::DefDouble2Format,"L") ) return false;
+  }
+  if ( !NMEA0183Msg.AddStrField(RMB.originID) ) return false;
+  if ( !NMEA0183Msg.AddStrField(RMB.destID) ) return false;
+  if ( !NMEA0183Msg.AddLatitudeField(RMB.latitude) ) return false;
+  if ( !NMEA0183Msg.AddLongitudeField(RMB.longitude) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(RMB.dtw,mTonm,"%05.1f") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(RMB.btw,radToDeg,"%05.1f") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(RMB.vmg,msTokn,"%05.1f") ) return false;
+  if ( !NMEA0183Msg.AddStrField(RMB.arrivalAlarm != 'A' ? "V" : "A") ) return false;
+
+  return true;
+}
+
 //*****************************************************************************
 // $GPRMC,092348.00,A,6035.04228,N,02115.15472,E,0.01,272.61,060815,7.2,E,D*34
-bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
+bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, char &Status, double &Latitude, double &Longitude,
                       double &TrueCOG, double &SOG, unsigned long &DaysSince1970, double &Variation, time_t *DateTime) {
   bool result=( NMEA0183Msg.FieldCount()>=11 );
 
@@ -309,6 +331,7 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
     time_t lDT;
 
     GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
+    Status=NMEA0183Msg.Field(1)[0];
     Latitude=LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
     Longitude=LatLonToDouble(NMEA0183Msg.Field(4),NMEA0183Msg.Field(5)[0]);
     SOG=atof(NMEA0183Msg.Field(6))*knToms;
@@ -421,6 +444,143 @@ bool NMEA0183SetVHW(tNMEA0183Msg &NMEA0183Msg, double TrueHeading, double Magnet
   if ( !NMEA0183Msg.AddDoubleField(MagneticHeading,radToDeg,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
   if ( !NMEA0183Msg.AddDoubleField(BoatSpeed,msTokn,tNMEA0183Msg::DefDoubleFormat,"N") ) return false;
   if ( !NMEA0183Msg.AddDoubleField(BoatSpeed,msTokmh,tNMEA0183Msg::DefDoubleFormat,"K") ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// VLW - Water LOG
+// $IIVLW,2591.1,N,000.00,N
+// $IIVLW,  1   ,2,  3   ,4
+// 1	2591.1	Total cumulative distance
+// 2	N	N=Nautical miles
+// 3	000.00	Distance since reset
+// 4	N	N=Nautical miles
+bool NMEA0183ParseVLW_nc(const tNMEA0183Msg &NMEA0183Msg, double &LOGtotal, double &LOGtrip) {
+  bool result=( NMEA0183Msg.FieldCount()>=4 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(0) != 0) {
+      LOGtotal = atof(NMEA0183Msg.Field(0));
+    }
+    if (NMEA0183Msg.Field(2) != 0) {
+      LOGtrip = atof(NMEA0183Msg.Field(2));
+    }
+  }
+
+  return result;
+}
+
+bool NMEA0183SetVLW(tNMEA0183Msg &NMEA0183Msg, double LOGtotal, double LOGtrip, const char *Src) {
+  if ( !NMEA0183Msg.Init("VLW",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(LOGtotal,1,tNMEA0183Msg::DefDoubleFormat,"N") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(LOGtrip,1,tNMEA0183Msg::DefDoubleFormat,"N") ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// MTW - Water Temperature
+// $IIMTW,24.6,C
+bool NMEA0183ParseMTW_nc(const tNMEA0183Msg &NMEA0183Msg, double &WaterTemperature) {
+  bool result=( NMEA0183Msg.FieldCount()>=2 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(1)[0] == 'C') {
+      WaterTemperature = atof(NMEA0183Msg.Field(0));
+    }
+  }
+
+  return result;
+}
+
+bool NMEA0183SetMTW(tNMEA0183Msg &NMEA0183Msg, double WaterTemperature, const char *Src) {
+  if ( !NMEA0183Msg.Init("MTW",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WaterTemperature,1,tNMEA0183Msg::DefDoubleFormat,"C") ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// DBK - Depth below Keel     Deprecated
+// $--DBK,0,f,2,M,4,F
+// 0) Depth, feet
+// 1) f = feet
+// 2) Depth, meters
+// 3) M = meters
+// 4) Depth, Fathoms
+// 5) F = Fathoms
+bool NMEA0183ParseDBK_nc(const tNMEA0183Msg &NMEA0183Msg, double &Depth) {
+  bool result=( NMEA0183Msg.FieldCount()>=6 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(1)[0] == 'f') {
+      Depth = atof(NMEA0183Msg.Field(0)) / mToFeet;
+    } else if (NMEA0183Msg.Field(3)[0] == 'M') {
+      Depth = atof(NMEA0183Msg.Field(2));
+    } else if (NMEA0183Msg.Field(5)[0] == 'F') {
+      Depth = atof(NMEA0183Msg.Field(4)) / mToFathoms;
+    }
+  }
+
+  return result;
+}
+
+//*****************************************************************************
+// DBT - Depth below Transducer
+// $--DBT,0,f,2,M,4,F
+// 0) Depth, feet
+// 1) f = feet
+// 2) Depth, meters
+// 3) M = meters
+// 4) Depth, Fathoms
+// 5) F = Fathoms
+bool NMEA0183ParseDBT_nc(const tNMEA0183Msg &NMEA0183Msg, double &Depth) {
+  bool result=( NMEA0183Msg.FieldCount()>=6 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(1)[0] == 'f') {
+      Depth = atof(NMEA0183Msg.Field(0)) / mToFeet;
+    } else if (NMEA0183Msg.Field(3)[0] == 'M') {
+      Depth = atof(NMEA0183Msg.Field(2));
+    } else if (NMEA0183Msg.Field(5)[0] == 'F') {
+      Depth = atof(NMEA0183Msg.Field(4)) / mToFathoms;
+    }
+  }
+
+  return result;
+}
+
+//*****************************************************************************
+// RSA - Rudder Sensor Angle
+// $--RSA,0,A,2,A
+// 0) Starboard (or single) rudder sensor, "-" means Turn To Port
+// 1) Status, A means data is valid
+// 2) Port rudder sensor
+// 3) Status, A means data is valid
+bool NMEA0183ParseRSA_nc(const tNMEA0183Msg &NMEA0183Msg, double &RudderSensor1, double &RudderSensor2) {
+  bool result=( NMEA0183Msg.FieldCount()>=4 );
+
+  if ( result ) {
+    if ( !NMEA0183IsNA(atof(NMEA0183Msg.Field(0))) ) {
+      if (NMEA0183Msg.Field(1)[0]=='A') { RudderSensor1 = atof(NMEA0183Msg.Field(0)); }
+    }
+    if ( !NMEA0183IsNA(atof(NMEA0183Msg.Field(2))) ) {
+      if (NMEA0183Msg.Field(3)[0]=='A') { RudderSensor2 = atof(NMEA0183Msg.Field(2)); }
+    }
+  }
+
+  return result;
+}
+
+bool NMEA0183SetRSA(tNMEA0183Msg &NMEA0183Msg, double RudderSensor1, double RudderSensor2, const char *Src) {
+  if ( !NMEA0183Msg.Init("RSA",Src) ) return false;
+  if ( !NMEA0183IsNA(RudderSensor1) ) {
+    if ( !NMEA0183Msg.AddDoubleField(RudderSensor1,1,tNMEA0183Msg::DefDoubleFormat,"A") ) return false;
+  } else { NMEA0183Msg.AddEmptyField(); NMEA0183Msg.AddEmptyField(); }
+  if ( !NMEA0183IsNA(RudderSensor2) ) {
+    if ( !NMEA0183Msg.AddDoubleField(RudderSensor2,1,tNMEA0183Msg::DefDoubleFormat,"A") ) return false;
+  } else { NMEA0183Msg.AddEmptyField(); NMEA0183Msg.AddEmptyField(); }
 
   return true;
 }
@@ -635,6 +795,15 @@ bool NMEA0183ParseWPL_nc(const tNMEA0183Msg &NMEA0183Msg, tWPL &wpl) {
     return result;
 }
 
+bool NMEA0183SetWPL(tNMEA0183Msg &NMEA0183Msg, double latitude, double longitude, char name[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src) {
+  if ( !NMEA0183Msg.Init("WPL",Src) ) return false;
+  if ( !NMEA0183Msg.AddLatitudeField(latitude) ) return false;
+  if ( !NMEA0183Msg.AddLongitudeField(longitude) ) return false;
+  if ( !NMEA0183Msg.AddStrField(name) ) return false;
+
+  return true;
+}
+
 //*****************************************************************************
 //$GPBOD,001.1,T,003.4,M,WETERB,WOUBRG*49
 bool NMEA0183ParseBOD_nc(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
@@ -650,6 +819,16 @@ bool NMEA0183ParseBOD_nc(const tNMEA0183Msg &NMEA0183Msg, tBOD &bod) {
       bod.originID[sizeof(bod.originID)/sizeof(char)-1]='\0';
 	  }
     return result;
+}
+
+bool NMEA0183SetBOD(tNMEA0183Msg &NMEA0183Msg, double trueBearing, double magBearing, char originID[NMEA0183_MAX_WP_NAME_LENGTH], char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src) {
+  if ( !NMEA0183Msg.Init("BOD",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(trueBearing,radToDeg,tNMEA0183Msg::DefDoubleFormat,"T") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(magBearing,radToDeg,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
+  if ( !NMEA0183Msg.AddStrField(destID) ) return false;
+  if ( !NMEA0183Msg.AddStrField(originID) ) return false;
+
+  return true;
 }
 
 //*****************************************************************************
@@ -684,5 +863,559 @@ bool NMEA0183SetMWV(tNMEA0183Msg &NMEA0183Msg, double WindAngle, tNMEA0183WindRe
   if ( !NMEA0183Msg.AddDoubleField(WindSpeed) ) return false;
   if ( !NMEA0183Msg.AddStrField("M") ) return false;
   if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  return true;
+}
+
+//*****************************************************************************
+// VWR - Apparent Wind Speed and Angle    Deprecated
+// $IIVWR,117,R,15.7,N,,,,
+// $IIVWR,0,1,2,3,4,5,6,7
+// 0) Wind Angle      117 degrees
+// 1) Side (L/R)      (R)ight of bow
+// 2) Speed in knots  15.7 knots
+// 3)                 N=knots
+// 4) Speed in m/s
+// 5)                 M=m/s
+// 6) Speed in km/h
+// 7)                 K=km/h
+bool NMEA0183ParseVWR_nc(const tNMEA0183Msg &NMEA0183Msg, double &WindAngle, double &WindSpeed) {
+  bool result=( NMEA0183Msg.FieldCount()>=8 );
+
+  if ( result ) {
+    WindAngle=atof(NMEA0183Msg.Field(0));
+    if (NMEA0183Msg.Field(1)[0] != 'R') {
+      WindAngle = (180 - WindAngle) + 180;
+    }
+
+    if (NMEA0183Msg.Field(3)[0] == 'N') {
+      WindSpeed = atof(NMEA0183Msg.Field(2)) * knToms;
+    } else if (NMEA0183Msg.Field(5)[0] == 'M') {
+      WindSpeed = atof(NMEA0183Msg.Field(4));
+    } else if (NMEA0183Msg.Field(7)[0] == 'K') {
+      WindSpeed = atof(NMEA0183Msg.Field(6)) * kmhToms;
+    }
+  }
+
+  return result;
+}
+
+bool NMEA0183SetVWR(tNMEA0183Msg &NMEA0183Msg, double WindAngle, double WindSpeed, const char *Src) {
+  double WindAngleVWR = (WindAngle>180)?(180-(WindAngle-180)):WindAngle;
+  if ( !NMEA0183Msg.Init("VWR",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WindAngleVWR,1,tNMEA0183Msg::DefDoubleFormat,(WindAngle>180)?"L":"R") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WindSpeed,msTokn,tNMEA0183Msg::DefDoubleFormat,"N") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WindSpeed,1,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WindSpeed,msTokmh,tNMEA0183Msg::DefDoubleFormat,"K") ) return false;
+  return true;
+}
+
+//*****************************************************************************
+// HDG - Heading - Deviation & Variation
+//
+//         1   2   3 4   5
+//         |   |   | |   |
+//  $--HDG,x.x,x.x,a,x.x,a
+//
+//  Field Number:
+//   1) Magnetic Sensor heading in degrees
+//   2) Magnetic Deviation, degrees
+//   3) Magnetic Deviation direction, E = Easterly, W = Westerly
+//   4) Magnetic Variation degrees
+//   5) Magnetic Variation direction, E = Easterly, W = Westerly
+bool NMEA0183ParseHDG_nc(const tNMEA0183Msg &NMEA0183Msg, double &MagneticHeading, double &Deviation, double &Variation) {
+  bool result=( NMEA0183Msg.FieldCount()>=5 );
+
+  if ( result ) {
+    MagneticHeading = atof(NMEA0183Msg.Field(0))*degToRad;
+    if ( !NMEA0183IsNA(atof(NMEA0183Msg.Field(1))) ) {
+      if (NMEA0183Msg.Field(2)[0] == 'E') {
+        Deviation = atof(NMEA0183Msg.Field(1))*degToRad;
+      } else if (NMEA0183Msg.Field(2)[0] == 'W') {
+        Deviation = (atof(NMEA0183Msg.Field(1))*-1.0)*degToRad;
+      }
+    }
+    if ( !NMEA0183IsNA(atof(NMEA0183Msg.Field(3))) ) {
+      if (NMEA0183Msg.Field(4)[0] == 'E') {
+        Variation = atof(NMEA0183Msg.Field(3))*degToRad;
+      } else if (NMEA0183Msg.Field(4)[0] == 'W') {
+        Variation = (atof(NMEA0183Msg.Field(3))*-1.0)*degToRad;
+      }
+    }
+  }
+
+  return result;
+}
+
+//*****************************************************************************
+// AAM - Waypoint Arrival Alarm
+//
+//         1 2 3   4 5
+//         | | |   | |
+//  $--AAM,A,A,x.x,N,c--c
+//
+//  Field Number:
+//   1) Status, BOOLEAN, A = Arrival circle entered
+//   2) Status, BOOLEAN, A = perpendicular passed at waypoint
+//   3) Arrival circle radius
+//   4) Units of radius, nautical miles
+//   5) Waypoint ID
+bool NMEA0183ParseAAM_nc(const tNMEA0183Msg &NMEA0183Msg, char &ArrivalCircleEntered, char &PerpendicularCrossed, double &arrivalRadius, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  bool result=( NMEA0183Msg.FieldCount()>=5 );
+
+  if ( result ) {
+    ArrivalCircleEntered = NMEA0183Msg.Field(0)[0];
+    PerpendicularCrossed = NMEA0183Msg.Field(1)[0];
+    if (NMEA0183Msg.Field(3)[0] == 'N') {
+      arrivalRadius = atof(NMEA0183Msg.Field(2))*nmTom;
+    }
+    strncpy(destID,NMEA0183Msg.Field(4),NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char));
+    destID[NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char)-1]='\0';
+  }
+
+  return result;
+}
+
+bool NMEA0183SetAAM(tNMEA0183Msg &NMEA0183Msg, char ArrivalCircleEntered, char PerpendicularCrossed, double arrivalRadius, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src) {
+  if ( !NMEA0183Msg.Init("AAM",Src) ) return false;
+  if ( !NMEA0183Msg.AddStrField(ArrivalCircleEntered != 'A' ? "V" : "A") ) return false;
+  if ( !NMEA0183Msg.AddStrField(PerpendicularCrossed != 'A' ? "V" : "A") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(arrivalRadius,mTonm,tNMEA0183Msg::DefDouble2Format,"N") ) return false;
+  if ( !NMEA0183Msg.AddStrField(destID) ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// APA - Autopilot Sentence "A"             Deprecated
+//
+//         1 2  3   4 5 6 7  8  9 10
+//         | |  |   | | | |  |  | |
+//  $--APA,A,A,x.xx,L,N,A,A,xxx,M,c---c
+//
+//  Field Number:
+//   1) Status
+//      V = LORAN-C Blink or SNR warning
+//      A = general warning flag or other navigation systems when a reliable
+//          fix is not available
+//   2) Status
+//      V = Loran-C Cycle Lock warning flag
+//      A = OK or not used
+//   3) Cross Track Error Magnitude
+//   4) Direction to steer, L or R
+//   5) Cross Track Units (Nautic miles or kilometers)
+//   6) Status
+//      A = Arrival Circle Entered
+//   7) Status
+//      A = Perpendicular passed at waypoint
+//   8) Bearing origin to destination
+//   9) M = Magnetic, T = True
+//   10) Destination Waypoint ID
+//
+// Note: some autopilots, Robertson in particular, misinterpret
+// "bearing from origin to destination" as "bearing from present position to destination".
+// This is likely due to the difference between the APB sentence and the APA sentence.
+// For the APA sentence this would be the correct thing to do for the data in the same field.
+// APA only differs from APB in this one field and APA leaves off the last two fields where this distinction is clearly spelled out.
+// This will result in poor performance if the boat is sufficiently off-course that the two bearings are different.
+bool NMEA0183ParseAPA_nc(const tNMEA0183Msg &NMEA0183Msg, double &xte, char &RudderDirectionOrder, char &ArrivalCircleEntered, char &PerpendicularCrossed, double &bearingFromOrigin, char &bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  bool result=( NMEA0183Msg.FieldCount()>=10 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(0)[0] != 'V' && NMEA0183Msg.Field(1)[0] != 'V') {
+      if (NMEA0183Msg.Field(4)[0] == 'N') {
+        xte = atof(NMEA0183Msg.Field(2))*nmTom;
+      } else {
+        xte = atof(NMEA0183Msg.Field(2))/1000;
+      }
+    	RudderDirectionOrder = NMEA0183Msg.Field(3)[0];
+      ArrivalCircleEntered = NMEA0183Msg.Field(5)[0];
+      PerpendicularCrossed = NMEA0183Msg.Field(6)[0];
+      bearingFromOrigin = atof(NMEA0183Msg.Field(7))*degToRad;
+      bearingFromOriginFlag = NMEA0183Msg.Field(8)[0];
+    }
+    strncpy(destID,NMEA0183Msg.Field(9),NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char));
+    destID[NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char)-1]='\0';
+  }
+
+  return result;
+}
+
+bool NMEA0183SetAPA(tNMEA0183Msg &NMEA0183Msg, double xte, char RudderDirectionOrder, char ArrivalCircleEntered, char PerpendicularCrossed, double bearingFromOrigin, char bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src) {
+  if ( !NMEA0183Msg.Init("APA",Src) ) return false;
+  if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(xte,mTonm,tNMEA0183Msg::DefDouble2Format) ) return false;
+  if ( !NMEA0183Msg.AddStrField(RudderDirectionOrder == NMEA0183RDO_MoveToStarboard ? "R" : (RudderDirectionOrder == NMEA0183RDO_MoveToPort ? "L" : "\0")) ) return false;
+  if ( !NMEA0183Msg.AddStrField("N") ) return false;
+  if ( !NMEA0183Msg.AddStrField(ArrivalCircleEntered != 'A' ? "V" : "A") ) return false;
+  if ( !NMEA0183Msg.AddStrField(PerpendicularCrossed != 'A' ? "V" : "A") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(bearingFromOrigin,radToDeg,tNMEA0183Msg::DefInt3Format,bearingFromOriginFlag != 'M' ? "T" : "M") ) return false;
+  if ( !NMEA0183Msg.AddStrField(destID) ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// APB - Autopilot Sentence "B"
+//
+//                                          13
+//         1 2 3   4 5 6 7 8   9 10   11  12|   14
+//         | | |   | | | | |   | |    |   | |   |
+//  $--APB,A,A,x.x,a,N,A,A,x.x,a,c--c,x.x,a,x.x,a
+//
+//  Field Number:
+//   1) Status
+//      V = LORAN-C Blink or SNR warning
+//      A = general warning flag or other navigation systems when a reliable
+//          fix is not available
+//   2) Status
+//      V = Loran-C Cycle Lock warning flag
+//      A = OK or not used
+//   3) Cross Track Error Magnitude
+//   4) Direction to steer, L or R
+//   5) Cross Track Units, N = Nautical Miles
+//   6) Status
+//      A = Arrival Circle Entered
+//   7) Status
+//      A = Perpendicular passed at waypoint
+//   8) Bearing origin to destination
+//   9) M = Magnetic, T = True
+//   10) Destination Waypoint ID
+//   11) Bearing, present position to Destination
+//   12) M = Magnetic, T = True
+//   13) Heading to steer to destination waypoint
+//   14) M = Magnetic, T = True
+bool NMEA0183ParseAPB_nc(const tNMEA0183Msg &NMEA0183Msg, double &xte, char &RudderDirectionOrder, char &ArrivalCircleEntered, char &PerpendicularCrossed, double &bearingFromOrigin, char &bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH], double &bearingToDestination, char &bearingToDestinationFlag, double &headingToDestination, char &headingToDestinationFlag) {
+  bool result=( NMEA0183Msg.FieldCount()>=14 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(0)[0] != 'V' && NMEA0183Msg.Field(1)[0] != 'V') {
+      if (NMEA0183Msg.Field(4)[0] == 'N') {
+        xte = atof(NMEA0183Msg.Field(2))*nmTom;
+      } else {
+        xte = atof(NMEA0183Msg.Field(2))/1000;
+      }
+    	RudderDirectionOrder = NMEA0183Msg.Field(3)[0];
+      ArrivalCircleEntered = NMEA0183Msg.Field(5)[0];
+      PerpendicularCrossed = NMEA0183Msg.Field(6)[0];
+      bearingFromOrigin = atof(NMEA0183Msg.Field(7))*degToRad;
+      bearingFromOriginFlag = NMEA0183Msg.Field(8)[0];
+    	bearingToDestination = atof(NMEA0183Msg.Field(10))*degToRad;
+      bearingToDestinationFlag = NMEA0183Msg.Field(11)[0];
+    	headingToDestination = atof(NMEA0183Msg.Field(12))*degToRad;
+      headingToDestinationFlag = NMEA0183Msg.Field(13)[0];
+    }
+    strncpy(destID,NMEA0183Msg.Field(9),NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char));
+    destID[NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char)-1]='\0';
+  }
+
+  return result;
+}
+
+bool NMEA0183SetAPB(tNMEA0183Msg &NMEA0183Msg, double xte, char RudderDirectionOrder, char ArrivalCircleEntered, char PerpendicularCrossed, double bearingFromOrigin, char bearingFromOriginFlag, char destID[NMEA0183_MAX_WP_NAME_LENGTH], double bearingToDestination, char bearingToDestinationFlag, double headingToDestination, char headingToDestinationFlag, const char *Src) {
+  if ( !NMEA0183Msg.Init("APB",Src) ) return false;
+  if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(xte,mTonm,tNMEA0183Msg::DefDouble2Format) ) return false;
+  if ( !NMEA0183Msg.AddStrField(RudderDirectionOrder == NMEA0183RDO_MoveToStarboard ? "R" : (RudderDirectionOrder == NMEA0183RDO_MoveToPort ? "L" : "\0")) ) return false;
+  if ( !NMEA0183Msg.AddStrField("N") ) return false;
+  if ( !NMEA0183Msg.AddStrField(ArrivalCircleEntered != 'A' ? "V" : "A") ) return false;
+  if ( !NMEA0183Msg.AddStrField(PerpendicularCrossed != 'A' ? "V" : "A") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(bearingFromOrigin,radToDeg,tNMEA0183Msg::DefInt3Format,bearingFromOriginFlag != 'M' ? "T" : "M") ) return false;
+  if ( !NMEA0183Msg.AddStrField(destID) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(bearingToDestination,radToDeg,tNMEA0183Msg::DefInt3Format,bearingToDestinationFlag != 'M' ? "T" : "M") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(headingToDestination,radToDeg,tNMEA0183Msg::DefInt3Format,headingToDestinationFlag != 'M' ? "T" : "M") ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// BWC - Bearing & Distance to Waypoint using a Great Circle route.
+// Time (UTC) and distance & bearing to, and location of, a specified waypoint from present position along the great circle path.
+//
+//                                                        11
+//         1         2       3 4        5 6   7 8   9 10  | 12
+//         |         |       | |        | |   | |   | |   | |
+//  $--BWC,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x.x,T,x.x,M,x.x,N,c--c
+//
+//  Field Number:
+//   1) UTCTime
+//   2) Waypoint Latitude
+//   3) N = North, S = South
+//   4) Waypoint Longitude
+//   5) E = East, W = West
+//   6) Bearing, True
+//   7) T = True
+//   8) Bearing, Magnetic
+//   9) M = Magnetic
+//   10) Nautical Miles
+//   11) N = Nautical Miles
+//   12) Waypoint ID
+bool NMEA0183ParseBWC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &latitude, double &longitude, double &trueBearing, double &magBearing, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  bool result=( NMEA0183Msg.FieldCount()>=12 );
+
+  if ( result ) {
+    GPSTime = NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
+    latitude = LatLonToDouble(NMEA0183Msg.Field(1),NMEA0183Msg.Field(2)[0]);
+    longitude = LatLonToDouble(NMEA0183Msg.Field(3),NMEA0183Msg.Field(4)[0]);
+    if (NMEA0183Msg.Field(6)[0] == 'T') {
+      trueBearing = atof(NMEA0183Msg.Field(5))*degToRad;
+    }
+    if (NMEA0183Msg.Field(8)[0] == 'M') {
+      magBearing = atof(NMEA0183Msg.Field(7))*degToRad;
+    }
+    if (NMEA0183Msg.Field(10)[0] == 'N') {
+      dtw = atof(NMEA0183Msg.Field(9))*nmTom;
+    }
+    strncpy(destID,NMEA0183Msg.Field(11),NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char));
+    destID[NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char)-1]='\0';
+  }
+
+  return result;
+}
+
+bool NMEA0183SetBWC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double latitude, double longitude, double trueBearing, double magBearing, double dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src) {
+  if ( !NMEA0183Msg.Init("BWC",Src) ) return false;
+  if ( !NMEA0183Msg.AddTimeField(GPSTime) ) return false;
+  if ( !NMEA0183Msg.AddLatitudeField(latitude) ) return false;
+  if ( !NMEA0183Msg.AddLongitudeField(longitude) ) return false;
+  if ( !NMEA0183IsNA(trueBearing) ) {
+    if ( !NMEA0183Msg.AddDoubleField(trueBearing,radToDeg,tNMEA0183Msg::DefDoubleFormat,"T") ) return false;
+  } else { NMEA0183Msg.AddEmptyField(); NMEA0183Msg.AddEmptyField(); }
+  if ( !NMEA0183IsNA(magBearing) ) {
+    if ( !NMEA0183Msg.AddDoubleField(magBearing,radToDeg,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
+  } else { NMEA0183Msg.AddEmptyField(); NMEA0183Msg.AddEmptyField(); }
+  if ( !NMEA0183Msg.AddDoubleField(dtw,mTonm,tNMEA0183Msg::DefDoubleFormat,"N") ) return false;
+  if ( !NMEA0183Msg.AddStrField(destID) ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// BWR - Bearing & Distance to Waypoint using a Rhumb Line route.
+// Time (UTC) and distance & bearing to, and location of, a specified waypoint from present position along the great circle path.
+//
+//                                                        11
+//         1         2       3 4        5 6   7 8   9 10  | 12
+//         |         |       | |        | |   | |   | |   | |
+//  $--BWR,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x.x,T,x.x,M,x.x,N,c--c
+//
+//  Field Number:
+//   1) UTCTime
+//   2) Waypoint Latitude
+//   3) N = North, S = South
+//   4) Waypoint Longitude
+//   5) E = East, W = West
+//   6) Bearing, True
+//   7) T = True
+//   8) Bearing, Magnetic
+//   9) M = Magnetic
+//   10) Nautical Miles
+//   11) N = Nautical Miles
+//   12) Waypoint ID
+bool NMEA0183ParseBWR_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &latitude, double &longitude, double &trueBearing, double &magBearing, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  bool result=( NMEA0183Msg.FieldCount()>=12 );
+
+  if ( result ) {
+    GPSTime = NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
+    latitude = LatLonToDouble(NMEA0183Msg.Field(1),NMEA0183Msg.Field(2)[0]);
+    longitude = LatLonToDouble(NMEA0183Msg.Field(3),NMEA0183Msg.Field(4)[0]);
+    if (NMEA0183Msg.Field(6)[0] == 'T') {
+      trueBearing = atof(NMEA0183Msg.Field(5))*degToRad;
+    }
+    if (NMEA0183Msg.Field(8)[0] == 'M') {
+      magBearing = atof(NMEA0183Msg.Field(7))*degToRad;
+    }
+    if (NMEA0183Msg.Field(10)[0] == 'N') {
+      dtw = atof(NMEA0183Msg.Field(9))*nmTom;
+    }
+    strncpy(destID,NMEA0183Msg.Field(11),NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char));
+    destID[NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char)-1]='\0';
+  }
+
+  return result;
+}
+
+bool NMEA0183SetBWR(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double latitude, double longitude, double trueBearing, double magBearing, double dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src) {
+  if ( !NMEA0183Msg.Init("BWR",Src) ) return false;
+  if ( !NMEA0183Msg.AddTimeField(GPSTime) ) return false;
+  if ( !NMEA0183Msg.AddLatitudeField(latitude) ) return false;
+  if ( !NMEA0183Msg.AddLongitudeField(longitude) ) return false;
+  if ( !NMEA0183IsNA(trueBearing) ) {
+    if ( !NMEA0183Msg.AddDoubleField(trueBearing,radToDeg,tNMEA0183Msg::DefDoubleFormat,"T") ) return false;
+  } else { NMEA0183Msg.AddEmptyField(); NMEA0183Msg.AddEmptyField(); }
+  if ( !NMEA0183IsNA(magBearing) ) {
+    if ( !NMEA0183Msg.AddDoubleField(magBearing,radToDeg,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
+  } else { NMEA0183Msg.AddEmptyField(); NMEA0183Msg.AddEmptyField(); }
+  if ( !NMEA0183Msg.AddDoubleField(dtw,mTonm,tNMEA0183Msg::DefDoubleFormat,"N") ) return false;
+  if ( !NMEA0183Msg.AddStrField(destID) ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// HSC - Heading Steering Command
+//
+//         1   2 3   4  5
+//         |   | |   |  |
+//  $--HSC,x.x,T,x.x,M,*hh<CR><LF>
+//  $GPHSC,   , ,101.1,M*2D
+//         1  ,2,3    ,4
+//  Field Number:
+//   1) Heading Degrees, True
+//   2) T = True
+//   3) Heading Degrees, Magnetic
+//   4) M = Magnetic
+bool NMEA0183ParseHSC_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueHeading, double &MagneticHeading) {
+  bool result=( NMEA0183Msg.FieldCount()>=4 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(1)[0] == 'T') {
+      TrueHeading = atof(NMEA0183Msg.Field(0))*degToRad;
+    }
+    if (NMEA0183Msg.Field(3)[0] == 'M') {
+      MagneticHeading = atof(NMEA0183Msg.Field(2))*degToRad;
+    }
+  }
+
+  return result;
+}
+
+bool NMEA0183SetHSC(tNMEA0183Msg &NMEA0183Msg, double TrueHeading, double MagneticHeading, const char *Src) {
+  if ( !NMEA0183Msg.Init("HSC",Src) ) return false;
+  if ( !NMEA0183IsNA(TrueHeading) ) {
+    if ( !NMEA0183Msg.AddDoubleField(TrueHeading,radToDeg,tNMEA0183Msg::DefDoubleFormat,"T") ) return false;
+  } else { NMEA0183Msg.AddEmptyField(); NMEA0183Msg.AddEmptyField(); }
+  if ( !NMEA0183IsNA(MagneticHeading) ) {
+    if ( !NMEA0183Msg.AddDoubleField(MagneticHeading,radToDeg,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
+  } else { NMEA0183Msg.AddEmptyField(); NMEA0183Msg.AddEmptyField(); }
+
+  return true;
+}
+
+//*****************************************************************************
+// WDC - Distance to Waypoint - Great Circle     Deprecated
+// $--WDC,XX.XX,N,C--C
+bool NMEA0183ParseWDC_nc(const tNMEA0183Msg &NMEA0183Msg, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  bool result=( NMEA0183Msg.FieldCount()>=3 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(1)[0] == 'N') {
+      dtw = atof(NMEA0183Msg.Field(0))*degToRad;
+      strncpy(destID,NMEA0183Msg.Field(2),NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char));
+      destID[NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char)-1]='\0';
+    }
+  }
+
+  return result;
+}
+
+bool NMEA0183SetWDC(tNMEA0183Msg &NMEA0183Msg, double dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src) {
+  if ( !NMEA0183Msg.Init("WDC",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(dtw,radToDeg,tNMEA0183Msg::DefDoubleFormat,"N") ) return false;
+  if ( !NMEA0183Msg.AddStrField(destID) ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// WDR - Distance to Waypoint - Rhumb Line       Deprecated
+// $--WDR,XX.XX,N,C--C
+bool NMEA0183ParseWDR_nc(const tNMEA0183Msg &NMEA0183Msg, double &dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  bool result=( NMEA0183Msg.FieldCount()>=3 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(1)[0] == 'N') {
+      dtw = atof(NMEA0183Msg.Field(0))*degToRad;
+      strncpy(destID,NMEA0183Msg.Field(2),NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char));
+      destID[NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char)-1]='\0';
+    }
+  }
+
+  return result;
+}
+
+bool NMEA0183SetWDR(tNMEA0183Msg &NMEA0183Msg, double dtw, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src) {
+  if ( !NMEA0183Msg.Init("WDR",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(dtw,radToDeg,tNMEA0183Msg::DefDoubleFormat,"N") ) return false;
+  if ( !NMEA0183Msg.AddStrField(destID) ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// XTE - Cross-Track Error, Measured
+//
+//         1 2 3   4 5  6
+//         | | |   | |  |
+//  $--XTE,A,A,x.x,a,N,*hh<CR><LF>
+//
+//  Field Number:
+//   1) Status
+//      V = LORAN-C Blink or SNR warning
+//      A = general warning flag or other navigation systems when a reliable
+//          fix is not available
+//   2) Status
+//      V = Loran-C Cycle Lock warning flag
+//      A = OK or not used
+//   3) Cross Track Error Magnitude
+//   4) Direction to steer, L or R
+//   5) Cross Track Units, N = Nautical Miles
+bool NMEA0183ParseXTE_nc(const tNMEA0183Msg &NMEA0183Msg, double &xte, char &RudderDirectionOrder) {
+  bool result=( NMEA0183Msg.FieldCount()>=5 );
+
+  if ( result ) {
+    if (NMEA0183Msg.Field(0)[0] != 'V' && NMEA0183Msg.Field(1)[0] != 'V') {
+      if (NMEA0183Msg.Field(4)[0] == 'N') {
+        xte = atof(NMEA0183Msg.Field(2))*nmTom;
+      }
+    	RudderDirectionOrder = NMEA0183Msg.Field(3)[0];
+    }
+  }
+
+  return result;
+}
+
+bool NMEA0183SetXTE(tNMEA0183Msg &NMEA0183Msg, double xte, char RudderDirectionOrder, const char *Src) {
+  if ( !NMEA0183Msg.Init("XTE",Src) ) return false;
+  if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  if ( !NMEA0183Msg.AddStrField("A") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(xte,mTonm,tNMEA0183Msg::DefDouble2Format) ) return false;
+  if ( !NMEA0183Msg.AddStrField(RudderDirectionOrder == NMEA0183RDO_MoveToStarboard ? "R" : (RudderDirectionOrder == NMEA0183RDO_MoveToPort ? "L" : "\0")) ) return false;
+  if ( !NMEA0183Msg.AddStrField("N") ) return false;
+
+  return true;
+}
+
+//*****************************************************************************
+// ZTG - UTC & Time to Destination Waypoint
+//
+//         1         2         3
+//         |         |         |
+//  $--ZTG,hhmmss.ss,hhmmss.ss,c--c
+//
+//  Field Number:
+//   1) Universal Time Coordinated (UTC)
+//   2) Time Remaining
+//   3) Destination Waypoint ID
+bool NMEA0183ParseZTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &ETA, char destID[NMEA0183_MAX_WP_NAME_LENGTH]) {
+  bool result=( NMEA0183Msg.FieldCount()>=3 );
+
+  if ( result ) {
+    GPSTime = NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
+    ETA = NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(1));
+    strncpy(destID,NMEA0183Msg.Field(2),NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char));
+    destID[NMEA0183_MAX_WP_NAME_LENGTH/sizeof(char)-1]='\0';
+  }
+
+  return result;
+}
+
+bool NMEA0183SetZTG(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double ETA, char destID[NMEA0183_MAX_WP_NAME_LENGTH], const char *Src) {
+  if ( !NMEA0183Msg.Init("ZTG",Src) ) return false;
+  if ( !NMEA0183Msg.AddTimeField(GPSTime) ) return false;
+  if ( !NMEA0183Msg.AddTimeField(ETA) ) return false;
+  if ( !NMEA0183Msg.AddStrField(destID) ) return false;
+
   return true;
 }

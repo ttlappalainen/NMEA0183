@@ -99,12 +99,17 @@ bool tNMEA0183::GetMessage(tNMEA0183Msg &NMEA0183Msg) {
         MsgInBuf[MsgInPos]=NewByte;
         MsgInPos++;
       } else if (MsgInStarted) {
-        MsgInBuf[MsgInPos]=NewByte;
-        if (NewByte=='*') MsgCheckSumStartPos=MsgInPos;
-        MsgInPos++;
-        if (MsgCheckSumStartPos!=SIZE_MAX and MsgCheckSumStartPos+3==MsgInPos) { // We have full checksum and so full message
-            MsgInBuf[MsgInPos]=0; // add null termination
-          if (NMEA0183Msg.SetMessage(MsgInBuf)) {
+        // Simrad/Robertson Dataline-X doesn't send checksum so we check for <cr> or <lf>
+        bool checksumCheck = (NewByte == 0x0a || NewByte == 0x0d) ? false : true;
+        if (checksumCheck) {
+          MsgInBuf[MsgInPos]=NewByte;
+          if (NewByte=='*') MsgCheckSumStartPos=MsgInPos;
+          MsgInPos++;
+        }
+        // We have full checksum and so full message, or message without checksum
+        if ((MsgCheckSumStartPos!=SIZE_MAX and MsgCheckSumStartPos+3==MsgInPos) || !checksumCheck) {
+          MsgInBuf[MsgInPos]=0; // add null termination
+          if (NMEA0183Msg.SetMessage(MsgInBuf,checksumCheck)) {
             NMEA0183Msg.SourceID=SourceID;
             result=true;
           }

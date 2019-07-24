@@ -107,11 +107,14 @@ class tNMEA0183Msg
   public:
     uint8_t SourceID;  // This is used to separate messages e.g. from different ports. Receiver must set this.
     static const char *DefDoubleFormat;
+    static const char *DefDouble2Format;
+    static const char *DefIntFormat;
+    static const char *DefInt3Format;
 
   public:
     tNMEA0183Msg();
     // Set message from received null terminated buffer. Returns true if checksum is OK.
-    bool SetMessage(const char *buf);
+    bool SetMessage(const char *buf, bool checksumCheck);
     // Get message as complete NMEA0183 format string to buffer.
     bool GetMessage(char *MsgData, size_t BufSize) const;
     // Clear message
