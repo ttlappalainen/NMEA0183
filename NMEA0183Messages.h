@@ -318,7 +318,10 @@ inline bool NMEA0183ParseVDM(const tNMEA0183Msg &NMEA0183Msg, uint8_t &pkgCnt, u
   return (NMEA0183Msg.IsMessageCode("VDM") ?
 		NMEA0183ParseVDM_nc(NMEA0183Msg, pkgCnt, pkgNmb, seqMessageId, channel, length, bitstream, fillBits) : false);
 }
-
+bool NMEA0183SetVDM(tNMEA0183Msg &NMEA0183Msg, char *channel, char *bitstream, const char *Src="AI");
+bool NMEA0183SetVDM(tNMEA0183Msg &NMEA0183Msg, char *channel, char *bitstream,  uint32_t count, uint32_t number, uint32_t id, uint32_t fillbits, const char *Src="AI");
+bool NMEA0183SetVDO(tNMEA0183Msg &NMEA0183Msg, char *channel, char *bitstream, const char *Src="AI");
+bool NMEA0183SetVDO(tNMEA0183Msg &NMEA0183Msg, char *channel, char *bitstream,  uint32_t count, uint32_t number, uint32_t id, uint32_t fillbits, const char *Src="AI");
 //*****************************************************************************
 //Parse a single NMEA0183 RTE message into a tRTE struct.
 //Depending on the size of the route a GPS will send a single RTE message or send multiple RTE messages via NMEA0183.
@@ -360,5 +363,14 @@ inline bool NMEA0183ParseMWV(const tNMEA0183Msg &NMEA0183Msg,double &WindAngle, 
 }
 
 bool NMEA0183SetMWV(tNMEA0183Msg &NMEA0183Msg, double WindAngle, tNMEA0183WindReference Reference, double WindSpeed, const char *Src="II");
+//*****************************************************************************
+// GSV - GPS Satellites in view
+bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisMSG, uint32_t SatelliteCount, 
+					uint32_t PRN1, uint32_t Elevation1, uint32_t Azimuth1, uint32_t SNR1,
+					uint32_t PRN2, uint32_t Elevation2, uint32_t Azimuth2, uint32_t SNR2,
+					uint32_t PRN3, uint32_t Elevation3, uint32_t Azimuth3, uint32_t SNR3,
+					uint32_t PRN4, uint32_t Elevation4, uint32_t Azimuth4, uint32_t SNR4,
+					const char *Src="GP");
+
 
 #endif
