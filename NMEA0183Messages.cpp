@@ -593,6 +593,59 @@ bool NMEA0183ParseVDM_nc(const tNMEA0183Msg &NMEA0183Msg,
 
   return result;
 }
+bool NMEA0183SetVDM(tNMEA0183Msg &NMEA0183Msg, char *channel, char *bitstream, const char *Src) {
+	if ( !NMEA0183Msg.Init("VDM",Src, '!') ) return false;    // field 1: packet identifier,  VDM
+	if ( !NMEA0183Msg.AddUInt32Field(1) ) return false;  // field 2: fragment count
+	if ( !NMEA0183Msg.AddUInt32Field(1) ) return false;  // field 3: fragment number
+	if ( !NMEA0183Msg.AddEmptyField() ) return false;  // field 4: sequential message ID	
+	if ( !NMEA0183Msg.AddStrField(channel) ) return false;  // field 5: Radio Channel code,  A or B
+	if ( !NMEA0183Msg.AddStrField(bitstream) ) return false;  // field 6: VDM payload data
+	if ( !NMEA0183Msg.AddUInt32Field(0) ) return false;  // field 7: number of fillbits (0-5)
+  
+  return true;
+}
+bool NMEA0183SetVDM(tNMEA0183Msg &NMEA0183Msg, char *channel, char *bitstream, uint32_t count, uint32_t number, uint32_t id, uint32_t fillbits,  const char *Src) {
+	if ( !NMEA0183Msg.Init("VDM",Src, '!') ) return false;    // field 1: packet identifier,  VDM
+	if ( !NMEA0183Msg.AddUInt32Field(count) ) return false;  // field 2: fragment count
+	if ( !NMEA0183Msg.AddUInt32Field(number) ) return false;  // field 3: fragment number
+	if (number == 1 && count == 1){
+			if ( !NMEA0183Msg.AddEmptyField() ) return false;  // field 4: sequential message ID	
+	}else{
+			if ( !NMEA0183Msg.AddUInt32Field(id) ) return false;// field 4: sequential message ID
+	}
+	if ( !NMEA0183Msg.AddStrField(channel) ) return false;  // field 5: Radio Channel code,  A or B
+	if ( !NMEA0183Msg.AddStrField(bitstream) ) return false;  // field 6: VDM payload data
+	if ( !NMEA0183Msg.AddUInt32Field(fillbits) ) return false;  // field 7: number of fillbits (0-5)
+  
+  return true;
+}
+bool NMEA0183SetVDO(tNMEA0183Msg &NMEA0183Msg, char *channel, char *bitstream, const char *Src) {
+	if ( !NMEA0183Msg.Init("VDO",Src, '!') ) return false;    // field 1: packet identifier,  VDM
+	if ( !NMEA0183Msg.AddUInt32Field(1) ) return false;  // field 2: fragment count
+	if ( !NMEA0183Msg.AddUInt32Field(1) ) return false;  // field 3: fragment number
+	if ( !NMEA0183Msg.AddEmptyField() ) return false;  // field 4: sequential message ID	
+	if ( !NMEA0183Msg.AddStrField(channel) ) return false;  // field 5: Radio Channel code,  A or B
+	if ( !NMEA0183Msg.AddStrField(bitstream) ) return false;  // field 6: VDM payload data
+	if ( !NMEA0183Msg.AddUInt32Field(0) ) return false;  // field 7: number of fillbits (0-5)
+  
+  return true;
+}
+bool NMEA0183SetVDO(tNMEA0183Msg &NMEA0183Msg, char *channel, char *bitstream, uint32_t count, uint32_t number, uint32_t id, uint32_t fillbits,  const char *Src) {
+	if ( !NMEA0183Msg.Init("VDO",Src, '!') ) return false;    // field 1: packet identifier,  VDM
+	if ( !NMEA0183Msg.AddUInt32Field(count) ) return false;  // field 2: fragment count
+	if ( !NMEA0183Msg.AddUInt32Field(number) ) return false;  // field 3: fragment number
+	if (number == 1 && count == 1){
+			if ( !NMEA0183Msg.AddEmptyField() ) return false;  // field 4: sequential message ID	
+	}else{
+			if ( !NMEA0183Msg.AddUInt32Field(id) ) return false;// field 4: sequential message ID
+	}
+	if ( !NMEA0183Msg.AddStrField(channel) ) return false;  // field 5: Radio Channel code,  A or B
+	if ( !NMEA0183Msg.AddStrField(bitstream) ) return false;  // field 6: VDM payload data
+	if ( !NMEA0183Msg.AddUInt32Field(fillbits) ) return false;  // field 7: number of fillbits (0-5)
+  
+  return true;
+}
+
 
 //*****************************************************************************
 //$GPRTE,2,1,c,0,W3IWI,DRIVWY,32CEDR,32-29,32BKLD,32-I95,32-US1,BW-32,BW-198*69
@@ -686,3 +739,39 @@ bool NMEA0183SetMWV(tNMEA0183Msg &NMEA0183Msg, double WindAngle, tNMEA0183WindRe
   if ( !NMEA0183Msg.AddStrField("A") ) return false;
   return true;
 }
+
+//*****************************************************************************
+// GSV - GPS sattellites in view
+//$GPGSV,2,1,08,01,40,083,46,02,17,308,41,12,07,344,39,14,22,228,45*75
+bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisMSG, uint32_t SatelliteCount, 
+					uint32_t PRN1, uint32_t Elevation1, uint32_t Azimuth1, uint32_t SNR1,
+					uint32_t PRN2, uint32_t Elevation2, uint32_t Azimuth2, uint32_t SNR2,
+					uint32_t PRN3, uint32_t Elevation3, uint32_t Azimuth3, uint32_t SNR3,
+					uint32_t PRN4, uint32_t Elevation4, uint32_t Azimuth4, uint32_t SNR4
+					, const char *Src){
+	if ( !NMEA0183Msg.Init("GSV",Src) ) return false;					
+	if ( !NMEA0183Msg.AddUInt32Field(totalMSG) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(thisMSG) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(SatelliteCount) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(PRN1) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(Elevation1) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(Azimuth1) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(SNR1) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(PRN2) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(Elevation2) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(Azimuth2) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(SNR2) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(PRN3) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(Elevation3) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(Azimuth3) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(SNR3) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(PRN4) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(Elevation4) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(Azimuth4) )return false;
+	if ( !NMEA0183Msg.AddUInt32Field(SNR4) )return false;	 
+	return true; 
+}
+	  
+	  
+	  
+	  
