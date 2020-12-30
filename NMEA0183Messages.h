@@ -152,6 +152,12 @@ enum tNMEA0183WindReference {
 void NMEA0183AddChecksum(char* msg);
 
 //*****************************************************************************
+double NMEA0183GPTimeToSeconds(const char *data);
+
+//*****************************************************************************
+time_t NMEA0183GPSDateTimetotime_t(const char *dateStr, const char *timeStr);
+
+//*****************************************************************************
 bool NMEA0183SetDBK(tNMEA0183Msg &NMEA0183Msg, double Depth, const char *Src="II");
 
 //*****************************************************************************

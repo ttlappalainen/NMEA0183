@@ -105,8 +105,8 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
   if (buf[i]!='*') { Clear(); return false; } // No checksum -> invalid message
   Data[iData]=0; // null termination for previous field
   i++; // Pass '*';
-  csMsg=(buf[i]<=57?buf[i]-48:buf[i]-55)<<4; i++;
-  csMsg|=(buf[i]<=57?buf[i]-48:buf[i]-55);
+  csMsg=(buf[i]<=57?buf[i]-48:(buf[i]<=70?buf[i]-55:buf[i]-87))<<4; i++;
+  csMsg|=(buf[i]<=57?buf[i]-48:(buf[i]<=70?buf[i]-55:buf[i]-87));
 
   if (csMsg==CheckSum) {
     result=true;
