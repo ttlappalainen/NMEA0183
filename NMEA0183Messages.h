@@ -153,6 +153,9 @@ enum tNMEA0183WindReference {
 void NMEA0183AddChecksum(char* msg);
 
 //*****************************************************************************
+double LatLonToDouble(const char *data, const char sign);
+
+//*****************************************************************************
 double NMEA0183GPTimeToSeconds(const char *data);
 
 //*****************************************************************************
