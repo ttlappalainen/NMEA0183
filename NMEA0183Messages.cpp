@@ -1,7 +1,7 @@
 /*
 NMEA0183Messages.cpp
 
-Copyright (c) 2015-2019 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2021 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -228,8 +228,8 @@ bool NMEA0183SetGGA(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, 
   if ( !NMEA0183Msg.AddUInt32Field(GPSQualityIndicator) ) return false;
   if ( !NMEA0183Msg.AddUInt32Field(SatelliteCount) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(HDOP) ) return false;
-  if ( !NMEA0183Msg.AddDoubleField(Altitude) ) return false;
-  if ( !NMEA0183Msg.AddDoubleField(GeoidalSeparation) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Altitude,1,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(GeoidalSeparation,1,tNMEA0183Msg::DefDoubleFormat,"M") ) return false;
   if ( !NMEA0183Msg.AddDoubleField(DGPSAge) ) return false;
   if ( !NMEA0183Msg.AddUInt32Field(DGPSReferenceStationID) ) return false;
 
