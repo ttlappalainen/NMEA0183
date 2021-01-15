@@ -142,6 +142,22 @@ struct tBOD {
   char destID[NMEA0183_MAX_WP_NAME_LENGTH];
 };
 
+struct tZDA {
+	// UTC time (hours, minutes, seconds, may have fractional subsecond)
+	double GPSTime;
+	// Day, 01 to 31
+	int GPSDay;
+	// Month, 01 to 12
+	int GPSMonth;
+	// Year (4 digits)
+	int GPSYear;
+	// Local zone description, 00 to + - 13 hours (- means East longitude)
+	int LZD;
+	// Local zone minutes description, 00 to +-59 (- means East longitude)
+	int LZMD;
+};
+
+
 enum tNMEA0183WindReference {
                             NMEA0183Wind_True=0,
                             // Apparent Wind (relative to the vessel centerline)
@@ -371,6 +387,16 @@ bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisM
 					uint32_t PRN3, uint32_t Elevation3, uint32_t Azimuth3, uint32_t SNR3,
 					uint32_t PRN4, uint32_t Elevation4, uint32_t Azimuth4, uint32_t SNR4,
 					const char *Src="GP");
+
+//*****************************************************************************
+// ZDA - Time & Date
+bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, int &GPSDay,
+					int &GPSMonth, int &GPSYear, int &LZD, int &LZMD);
+
+inline bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, tZDA &zda) {
+
+	return NMEA0183ParseZDA(NMEA0183Msg, zda.GPSTime, zda.GPSDay, zda.GPSMonth, zda.GPSYear, zda.LZD, zda.LZMD);
+}
 
 
 #endif

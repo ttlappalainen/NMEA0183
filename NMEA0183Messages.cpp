@@ -772,6 +772,24 @@ bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisM
 	return true; 
 }
 	  
+//*****************************************************************************
+// $GPZDA,160012.71,11,03,2004,-1,00*7D
+bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, int &GPSDay, int &GPSMonth, int &GPSYear,
+                      int &LZD, int &LZMD) {
+  bool result=( NMEA0183Msg.FieldCount()>=6 );
+
+  if ( result ) {
+    GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
+    GPSDay=atoi(NMEA0183Msg.Field(1));
+    GPSMonth=atoi(NMEA0183Msg.Field(2));
+    GPSYear=atoi(NMEA0183Msg.Field(3));
+    LZD=atoi(NMEA0183Msg.Field(4));
+    LZMD=atoi(NMEA0183Msg.Field(5));
+  }
+
+  return result;
+}
+
 	  
 	  
 	  
