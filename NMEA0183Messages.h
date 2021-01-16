@@ -393,6 +393,8 @@ bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisM
 bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, int &GPSDay,
 					int &GPSMonth, int &GPSYear, int &LZD, int &LZMD);
 
+bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, time_t &DateTime, long &Timezone);
+
 inline bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, tZDA &zda) {
 
 	return NMEA0183ParseZDA(NMEA0183Msg, zda.GPSTime, zda.GPSDay, zda.GPSMonth, zda.GPSYear, zda.LZD, zda.LZMD);

@@ -790,6 +790,29 @@ bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, int &GPS
   return result;
 }
 
+bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, time_t &DateTime, long &Timezone) {
+
+  bool result=( NMEA0183Msg.FieldCount()>=6 );
+
+  if ( result ) {
+    tmElements_t TimeElements;
+    char StrCvt[3]="00";
+    StrCvt[0]=NMEA0183Msg.Field(0)[0]; StrCvt[1]=NMEA0183Msg.Field(0)[1];
+    tNMEA0183Msg::SetHour(TimeElements,atoi(StrCvt));
+    StrCvt[0]=NMEA0183Msg.Field(0)[2]; StrCvt[1]=NMEA0183Msg.Field(0)[3];
+    tNMEA0183Msg::SetMin(TimeElements,atoi(StrCvt));
+    StrCvt[0]=NMEA0183Msg.Field(0)[4]; StrCvt[1]=NMEA0183Msg.Field(0)[5];
+    tNMEA0183Msg::SetSec(TimeElements,atoi(StrCvt));
+    tNMEA0183Msg::SetDay(TimeElements,atoi(NMEA0183Msg.Field(1)));
+    tNMEA0183Msg::SetMonth(TimeElements,atoi(NMEA0183Msg.Field(2)));
+    tNMEA0183Msg::SetYear(TimeElements,atoi(NMEA0183Msg.Field(3)));
+    DateTime=tNMEA0183Msg::makeTime(TimeElements);
+
+    Timezone=atoi(NMEA0183Msg.Field(4))*60*60+atoi(NMEA0183Msg.Field(5))*60;
+  }
+
+  return result;
+}
 	  
 	  
 	  
