@@ -232,20 +232,35 @@ inline bool NMEA0183ParseRMB(const tNMEA0183Msg &NMEA0183Msg, tRMB &rmb) {
 
 //*****************************************************************************
 // RMC
-bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
+bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, char &Status, double &Latitude, double &Longitude,
                       double &TrueCOG, double &SOG, unsigned long &DaysSince1970, double &Variation, time_t *DateTime=0);
+
+inline bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
+                      double &TrueCOG, double &SOG, unsigned long &DaysSince1970, double &Variation, time_t *DateTime=0) {
+  char Status;
+  return NMEA0183ParseRMC_nc(NMEA0183Msg, GPSTime, Status, Latitude, Longitude, TrueCOG, SOG, DaysSince1970, Variation, DateTime);
+}
+
+inline bool NMEA0183ParseRMC(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, char &Status, double &Latitude, double &Longitude,
+                      double &TrueCOG, double &SOG, unsigned long &DaysSince1970, double &Variation, time_t *DateTime=0) {
+  (void)DateTime;
+  return (NMEA0183Msg.IsMessageCode("RMC")
+            ?NMEA0183ParseRMC_nc(NMEA0183Msg, GPSTime, Status, Latitude, Longitude, TrueCOG, SOG, DaysSince1970, Variation, DateTime)
+            :false);
+}
 
 inline bool NMEA0183ParseRMC(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
                       double &TrueCOG, double &SOG, unsigned long &DaysSince1970, double &Variation, time_t *DateTime=0) {
   (void)DateTime;
+  char Status;
   return (NMEA0183Msg.IsMessageCode("RMC")
-            ?NMEA0183ParseRMC_nc(NMEA0183Msg, GPSTime, Latitude, Longitude, TrueCOG, SOG, DaysSince1970, Variation, DateTime)
+            ?NMEA0183ParseRMC_nc(NMEA0183Msg, GPSTime, Status, Latitude, Longitude, TrueCOG, SOG, DaysSince1970, Variation, DateTime)
             :false);
 }
 
 inline bool NMEA0183ParseRMC(const tNMEA0183Msg &NMEA0183Msg, tRMC &rmc, time_t *DateTime=0) {
 
-	return NMEA0183ParseRMC(NMEA0183Msg, rmc.GPSTime, rmc.latitude, rmc.longitude, rmc.trueCOG, rmc.SOG, rmc.daysSince1970, rmc.variation, DateTime);
+	return NMEA0183ParseRMC(NMEA0183Msg, rmc.GPSTime, rmc.status, rmc.latitude, rmc.longitude, rmc.trueCOG, rmc.SOG, rmc.daysSince1970, rmc.variation, DateTime);
 }
 
 bool NMEA0183SetRMC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, double Longitude,
@@ -392,6 +407,8 @@ bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisM
 // ZDA - Time & Date
 bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, int &GPSDay,
 					int &GPSMonth, int &GPSYear, int &LZD, int &LZMD);
+
+bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, time_t &DateTime, long &Timezone);
 
 inline bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, tZDA &zda) {
 

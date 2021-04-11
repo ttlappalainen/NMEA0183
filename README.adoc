@@ -30,6 +30,16 @@ Note also that paths are version depended and here 1.6.11.
     virtual int availableForWrite(void)=0;
 ----
 
+== Changes ==
+08.04.2021
+
+- Thanks to lsoltero. Fixed logic error on NMEA0183Msg.cpp tNMEA0183Msg::Init "if ( _Sender==0 &&..." -> "if ( _Sender==0 ||...".
+
+- Added Status for ParseRMC.
+
+- Thanks to BerndCirotzki, issue #22. Added missing iBuf++ to tNMEA0183::SendBuf.
+
+- Added Changes to README.
 
 == License ==
 

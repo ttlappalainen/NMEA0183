@@ -185,7 +185,7 @@ bool tNMEA0183::SendBuf(const char *buf) {
 
   for (size_t temp = (MsgOutWritePos + 1) % MsgOutBufSize;
        buf[iBuf]!=0 && temp!=MsgOutReadPos;
-       temp = (MsgOutWritePos + 1) % MsgOutBufSize ) {
+       temp = (MsgOutWritePos + 1) % MsgOutBufSize, iBuf++ ) {
     MsgOutBuf[MsgOutWritePos]=buf[iBuf];
     MsgOutWritePos=temp;
   }

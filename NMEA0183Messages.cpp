@@ -301,7 +301,7 @@ bool NMEA0183ParseRMB_nc(const tNMEA0183Msg &NMEA0183Msg, tRMB &RMB) {
 
 //*****************************************************************************
 // $GPRMC,092348.00,A,6035.04228,N,02115.15472,E,0.01,272.61,060815,7.2,E,D*34
-bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, double &Latitude, double &Longitude,
+bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, char &Status, double &Latitude, double &Longitude,
                       double &TrueCOG, double &SOG, unsigned long &DaysSince1970, double &Variation, time_t *DateTime) {
   bool result=( NMEA0183Msg.FieldCount()>=11 );
 
@@ -309,6 +309,7 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
     time_t lDT;
 
     GPSTime=NMEA0183GPTimeToSeconds(NMEA0183Msg.Field(0));
+    Status=NMEA0183Msg.Field(1)[0];
     Latitude=LatLonToDouble(NMEA0183Msg.Field(2),NMEA0183Msg.Field(3)[0]);
     Longitude=LatLonToDouble(NMEA0183Msg.Field(4),NMEA0183Msg.Field(5)[0]);
     SOG=atof(NMEA0183Msg.Field(6))*knToms;
@@ -790,6 +791,29 @@ bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, int &GPS
   return result;
 }
 
+bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, time_t &DateTime, long &Timezone) {
+
+  bool result=( NMEA0183Msg.FieldCount()>=6 );
+
+  if ( result ) {
+    tmElements_t TimeElements;
+    char StrCvt[3]="00";
+    StrCvt[0]=NMEA0183Msg.Field(0)[0]; StrCvt[1]=NMEA0183Msg.Field(0)[1];
+    tNMEA0183Msg::SetHour(TimeElements,atoi(StrCvt));
+    StrCvt[0]=NMEA0183Msg.Field(0)[2]; StrCvt[1]=NMEA0183Msg.Field(0)[3];
+    tNMEA0183Msg::SetMin(TimeElements,atoi(StrCvt));
+    StrCvt[0]=NMEA0183Msg.Field(0)[4]; StrCvt[1]=NMEA0183Msg.Field(0)[5];
+    tNMEA0183Msg::SetSec(TimeElements,atoi(StrCvt));
+    tNMEA0183Msg::SetDay(TimeElements,atoi(NMEA0183Msg.Field(1)));
+    tNMEA0183Msg::SetMonth(TimeElements,atoi(NMEA0183Msg.Field(2)));
+    tNMEA0183Msg::SetYear(TimeElements,atoi(NMEA0183Msg.Field(3)));
+    DateTime=tNMEA0183Msg::makeTime(TimeElements);
+
+    Timezone=atoi(NMEA0183Msg.Field(4))*60*60+atoi(NMEA0183Msg.Field(5))*60;
+  }
+
+  return result;
+}
 	  
 	  
 	  

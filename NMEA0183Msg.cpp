@@ -153,7 +153,7 @@ bool tNMEA0183Msg::Init(const char *_MessageCode, const char *_Sender, char _Pre
   Clear();
   size_t nSender=2;
   size_t nMessageCode=0;
-  if ( _Sender==0 && (nSender=strlen(_Sender))>7 ) return false;
+  if ( _Sender==0 || (nSender=strlen(_Sender))>7 ) return false;
   if ( _MessageCode==0 || (nMessageCode=strlen(_MessageCode))>10 ) return false;
 
   Prefix=_Prefix;
