@@ -773,6 +773,39 @@ bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisM
 	return true; 
 }
 	  
+bool NMEA0183ParseGSV(const tNMEA0183Msg &NMEA0183Msg, int &totalMSG, int &thisMSG, int &SatelliteCount,
+                        struct tGSV &Msg1,
+                        struct tGSV &Msg2,
+                        struct tGSV &Msg3,
+                        struct tGSV &Msg4)
+{
+  bool result = ( NMEA0183Msg.FieldCount() >= 19);
+
+  if(result) {
+    totalMSG = atoi(NMEA0183Msg.Field(0));
+    thisMSG = atoi(NMEA0183Msg.Field(1));
+    SatelliteCount = atoi(NMEA0183Msg.Field(2));
+    Msg1.PRN = atoi(NMEA0183Msg.Field(3));
+    Msg1.Elevation =  NMEA0183GetDouble(NMEA0183Msg.Field(4));
+    Msg1.Azimuth = NMEA0183GetDouble(NMEA0183Msg.Field(5));
+    Msg1.SNR = NMEA0183GetDouble(NMEA0183Msg.Field(6));
+    Msg2.PRN = atoi(NMEA0183Msg.Field(7));
+    Msg2.Elevation =  NMEA0183GetDouble(NMEA0183Msg.Field(8));
+    Msg2.Azimuth = NMEA0183GetDouble(NMEA0183Msg.Field(9));
+    Msg2.SNR = NMEA0183GetDouble(NMEA0183Msg.Field(10));
+    Msg3.PRN = atoi(NMEA0183Msg.Field(11));
+    Msg3.Elevation =  NMEA0183GetDouble(NMEA0183Msg.Field(12));
+    Msg3.Azimuth = NMEA0183GetDouble(NMEA0183Msg.Field(13));
+    Msg3.SNR = NMEA0183GetDouble(NMEA0183Msg.Field(14));
+    Msg4.PRN = atoi(NMEA0183Msg.Field(15));
+    Msg4.Elevation =  NMEA0183GetDouble(NMEA0183Msg.Field(16));
+    Msg4.Azimuth = NMEA0183GetDouble(NMEA0183Msg.Field(17));
+    Msg4.SNR = NMEA0183GetDouble(NMEA0183Msg.Field(18));
+  }
+
+  return result;
+}
+
 //*****************************************************************************
 // $GPZDA,160012.71,11,03,2004,-1,00*7D
 bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, int &GPSDay, int &GPSMonth, int &GPSYear,
