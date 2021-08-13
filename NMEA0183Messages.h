@@ -157,6 +157,12 @@ struct tZDA {
 	int LZMD;
 };
 
+struct tGSV {
+	uint8_t		PRN;
+	double		Elevation;
+	double		Azimuth;
+	double		SNR;
+};
 
 enum tNMEA0183WindReference {
                             NMEA0183Wind_True=0,
@@ -403,6 +409,12 @@ bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisM
 					uint32_t PRN4, uint32_t Elevation4, uint32_t Azimuth4, uint32_t SNR4,
 					const char *Src="GP");
 
+bool NMEA0183ParseGSV(const tNMEA0183Msg &NMEA0183Msg, int &totalMSG, int &thisMSG, int &SatelliteCount,
+                        struct tGSV &Msg1,
+                        struct tGSV &Msg2,
+                        struct tGSV &Msg3,
+                        struct tGSV &Msg4);
+
 //*****************************************************************************
 // ZDA - Time & Date
 bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, int &GPSDay,
@@ -414,6 +426,5 @@ inline bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, tZDA &zda) {
 
 	return NMEA0183ParseZDA(NMEA0183Msg, zda.GPSTime, zda.GPSDay, zda.GPSMonth, zda.GPSYear, zda.LZD, zda.LZMD);
 }
-
 
 #endif
