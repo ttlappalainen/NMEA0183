@@ -158,9 +158,28 @@ struct tZDA {
 };
 
 struct tGSV {
-	uint8_t		PRN;
+	// Satellite id - 8 bits
+    // The following is from publicly available documentation from NMEA 
+    // -- 20190515 nmea 0183 gsv sentences corrections
+    // a) GPS satellites are identified by their PRN numbers, which range from 1 to 32
+    // b) The numbers 33-64 are reserved for SBAS satellites. The SBAS system PRN 
+    // numbers are 120-138. The offset from NMEA SBAS SV ID to SBAS PRN number is 87. 
+    // SBAS PRN number of 120 minus 87 yields the SV ID of 33. 
+    // The addition of 87 to the SV ID yields the SBAS PRN number.  
+    // c) The numbers 65-96 are reserved for GLONASS satellites. GLONASS satellites 
+    // are identified by 64+satellite slot number. The slot numbers are 1 through 24 
+    // for the full GLONASS constellation of 24 satellites, this gives a range of 
+    // 65 through 88. The numbers 89 through 96 are available if slot numbers above 
+    // 24 are allocated to on-orbit spares.
+	uint8_t		SVID;
+
+	// Elevation 0-90 degrees
 	double		Elevation;
+
+	// Aziumth 0-359 degrees true
 	double		Azimuth;
+
+	// signal to noise ratio 0-99 dB-Hz
 	double		SNR;
 };
 
