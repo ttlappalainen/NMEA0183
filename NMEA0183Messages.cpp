@@ -186,7 +186,7 @@ bool NMEA0183SetDBx(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, doub
 //
 
 //expecting NMEA0183 3.0. It includes Range field (must handle value/empty field/no field)
-bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset, uint16_t &Range ) {
+bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset, uint32_t &Range ) {
   bool result;
 
   if ( NMEA0183Msg.FieldCount()==3 ) {
@@ -222,11 +222,11 @@ bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTra
   return result;
 }
 
-bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src) {
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, uint32_t Range, const char *Src) {
   if ( !NMEA0183Msg.Init("DPT",Src) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(Offset) ) return false;
-  if ( !NMEA0183Msg.AddDoubleField(Range) ) return false;
+  if ( !NMEA0183Msg.AddUInt32Field(Range) ) return false;
 
   return true;
 }
