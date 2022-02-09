@@ -207,6 +207,22 @@ bool NMEA0183SetDBx(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, doub
 
 
 //*****************************************************************************
+bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset, uint16_t &Range );
+inline bool NMEA0183ParseDPT(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset, uint16_t &Range ) {
+  return (NMEA0183Msg.IsMessageCode("DPT")
+            ?NMEA0183ParseDPT_nc(NMEA0183Msg,DepthBelowTransducer, Offset, Range )
+            :false);
+}
+
+bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset );
+inline bool NMEA0183ParseDPT(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset ) {
+  return (NMEA0183Msg.IsMessageCode("DPT")
+            ?NMEA0183ParseDPT_nc(NMEA0183Msg,DepthBelowTransducer, Offset )
+            :false);
+}
+
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src="II");
+
 bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src="II");
 
 
