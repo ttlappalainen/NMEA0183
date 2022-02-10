@@ -187,39 +187,26 @@ bool NMEA0183SetDBx(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, doub
 
 //expecting NMEA0183 3.0. It includes Range field (must handle value/empty field/no field)
 bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset, double &Range ) {
-  bool result;
-
-  if ( NMEA0183Msg.FieldCount()==3 ) {
-    DepthBelowTransducer=atof(NMEA0183Msg.Field(0));
-    Offset=atof(NMEA0183Msg.Field(1));
-	if (NMEA0183Msg.FieldLen(4) > 0){
-			Range=atof(NMEA0183Msg.Field(2));
-	}else{
-			Range=0;
+	bool result=( NMEA0183Msg.FieldCount()>= 2);
+	if ( result ) {
+		DepthBelowTransducer=NMEA0183GetDouble(NMEA0183Msg.Field(0));
+		Offset=NMEA0183GetDouble(NMEA0183Msg.Field(1));
+		Range=NMEA0183DoubleNA;
+		if ( NMEA0183Msg.FieldCount()>2  ) {
+			Range=NMEA0183GetDouble(NMEA0183Msg.Field(2));
+		}		
 	}
-	result= 1;
-  } else if ( NMEA0183Msg.FieldCount()==2 ) {
-    DepthBelowTransducer=atof(NMEA0183Msg.Field(0));
-    Offset=atof(NMEA0183Msg.Field(1));
-    Range=0;
-	result= 1;
-  } else{
-    result = 0;
-  }
-  return result;
+	return result;
 }
 
 //expecting NMEA0183 before 3.0. it did not include Range field,  ignore it
 bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset ) {
-  bool result;
-  if ( NMEA0183Msg.FieldCount()>=2 ) {
-    DepthBelowTransducer=atof(NMEA0183Msg.Field(0));
-    Offset=atof(NMEA0183Msg.Field(1));
-	result= 1;
-  }else{
-    result = 0;
-  }
-  return result;
+	bool result=( NMEA0183Msg.FieldCount()>= 2);
+	if ( result ) {
+		DepthBelowTransducer=NMEA0183GetDouble(NMEA0183Msg.Field(0));
+		Offset=NMEA0183GetDouble(NMEA0183Msg.Field(1));
+	}
+	return result;
 }
 
 bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, uint32_t Range, const char *Src) {
