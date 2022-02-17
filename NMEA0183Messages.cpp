@@ -213,8 +213,7 @@ bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, doub
   if ( !NMEA0183Msg.Init("DPT",Src) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(Offset) ) return false;
-  if ( !NMEA0183Msg.AddUInt32Field((uint32_t)round(abs(Range))) ) return false;
-
+  if ( !NMEA0183Msg.AddDoubleField(Range, 1, "%.0f" ) ) return false;  
   return true;
 }
 
