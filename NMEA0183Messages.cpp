@@ -209,7 +209,7 @@ bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTra
 	return result;
 }
 
-bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, uint32_t Range, const char *Src) {
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src) {
   if ( !NMEA0183Msg.Init("DPT",Src) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(Offset) ) return false;
