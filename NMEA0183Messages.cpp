@@ -177,12 +177,46 @@ bool NMEA0183SetDBx(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, doub
       return NMEA0183SetDBK(NMEA0183Msg,Depth,Src);
     }
   }
-
   return NMEA0183SetDBT(NMEA0183Msg,DepthBelowTransducer,Src);
 }
 
 //*****************************************************************************
-// $IIDPT,10.5,0.9*hh
+// $IIDPT,10.5,0.9*hh       - before NMEA0183 v3.0
+// $IIDPT,10.5,0.9,100*hh   - starting with NMEA0183 v3.0
+//
+
+//expecting NMEA0183 3.0. It includes Range field (must handle value/empty field/no field)
+bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset, double &Range ) {
+	bool result=( NMEA0183Msg.FieldCount()>= 2);
+	if ( result ) {
+		DepthBelowTransducer=NMEA0183GetDouble(NMEA0183Msg.Field(0));
+		Offset=NMEA0183GetDouble(NMEA0183Msg.Field(1));
+		Range=NMEA0183DoubleNA;
+		if ( NMEA0183Msg.FieldCount()>2  ) {
+			Range=NMEA0183GetDouble(NMEA0183Msg.Field(2));
+		}		
+	}
+	return result;
+}
+
+//expecting NMEA0183 before 3.0. it did not include Range field,  ignore it
+bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTransducer, double &Offset ) {
+	bool result=( NMEA0183Msg.FieldCount()>= 2);
+	if ( result ) {
+		DepthBelowTransducer=NMEA0183GetDouble(NMEA0183Msg.Field(0));
+		Offset=NMEA0183GetDouble(NMEA0183Msg.Field(1));
+	}
+	return result;
+}
+
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src) {
+  if ( !NMEA0183Msg.Init("DPT",Src) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Offset) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Range, 1, "%.0f" ) ) return false;  
+  return true;
+}
+
 bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src) {
   if ( !NMEA0183Msg.Init("DPT",Src) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer) ) return false;
