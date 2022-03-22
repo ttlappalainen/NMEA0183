@@ -31,6 +31,33 @@ Note also that paths are version depended and here 1.6.11.
 ----
 
 == Changes ==
+23.02.2022
+
+- Added _FieldCount checking to NMEA0183Msg.cpp tNMEA0183Msg::SetMessage. Thanks to Andreas Vogel.
+
+- Updated changes to GitHub. Several changes has been in use on own code, which were not published. E.g.,
+  NMEA0183GetDouble has been changed to replace atof.
+  
+- Updated copyright.
+
+15.02.2022
+
+- Add parser for DPT by mjsneijders.
+
+21.08.2021
+
+- Thanks to sailingfree. Added GSV parser.
+
+- Thanks to orca-hydromancer. Accepts lowercase hex in checksum.
+
+- Changed some value parsers to use NMEA0183GetDouble instead of directly atof.
+
+- Fixed month handling in case of TimeLib.h has been used. On tmElements_t month starts from 1.
+
+- Empty values returns now NA.
+
+- Added GetMessageStream for tNMEA0183.
+
 08.04.2021
 
 - Thanks to lsoltero. Fixed logic error on NMEA0183Msg.cpp tNMEA0183Msg::Init "if ( _Sender==0 &&..." -> "if ( _Sender==0 ||...".

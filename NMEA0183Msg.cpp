@@ -1,7 +1,7 @@
 /*
 NMEA0183Msg.cpp
 
-Copyright (c) 2015-2021 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -52,8 +52,8 @@ extern uint32_t millis();
 }
 #endif
 
-const char *tNMEA0183Msg::EmptyField="";
-const char *tNMEA0183Msg::DefDoubleFormat="%.1f";
+const char *const tNMEA0183Msg::EmptyField="";
+const char *const tNMEA0183Msg::DefDoubleFormat="%.1f";
 
 //*****************************************************************************
 tNMEA0183Msg::tNMEA0183Msg() {
@@ -99,14 +99,19 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
       Data[iData]=0; // null termination for previous field
       Fields[_FieldCount]=iData+1;   // Set start of field
       _FieldCount++;
+      if (_FieldCount >= MAX_NMEA0183_MSG_FIELDS ) {
+        Clear();
+        return false;
+      }
     }
   }
 
   if (buf[i]!='*') { Clear(); return false; } // No checksum -> invalid message
   Data[iData]=0; // null termination for previous field
   i++; // Pass '*';
-  csMsg=(buf[i]<=57?buf[i]-48:buf[i]-55)<<4; i++;
-  csMsg|=(buf[i]<=57?buf[i]-48:buf[i]-55);
+  // Added test to allow lower case chcksum.
+  csMsg=(buf[i]<=57?buf[i]-48:(buf[i]<=70?buf[i]-55:buf[i]-87))<<4; i++;
+  csMsg|=(buf[i]<=57?buf[i]-48:(buf[i]<=70?buf[i]-55:buf[i]-87));
 
   if (csMsg==CheckSum) {
     result=true;

@@ -1,7 +1,7 @@
 /*
 NMEA0183Messages.h
 
-Copyright (c) 2015-2021 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -191,6 +191,15 @@ enum tNMEA0183WindReference {
 
 
 void NMEA0183AddChecksum(char* msg);
+
+//*****************************************************************************
+double LatLonToDouble(const char *data, const char sign);
+
+//*****************************************************************************
+double NMEA0183GPTimeToSeconds(const char *data);
+
+//*****************************************************************************
+time_t NMEA0183GPSDateTimetotime_t(const char *dateStr, const char *timeStr, time_t defDate=NMEA0183time_tNA);
 
 //*****************************************************************************
 bool NMEA0183SetDBK(tNMEA0183Msg &NMEA0183Msg, double Depth, const char *Src="II");

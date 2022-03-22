@@ -1,7 +1,7 @@
 /*
 NMEA0183Messages.cpp
 
-Copyright (c) 2015-2021 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -66,7 +66,7 @@ double NMEA0183GetDouble(const char *data) {
 
   for ( ;*data==' ';data++); // Pass spaces
 
-  if ( *data!=0 ) {
+  if ( *data!=0 && *data!=',' ) { // not empty field
     val=atof(data);
   }
 
@@ -84,30 +84,49 @@ double NMEA0183GetDouble(const char *data, const double &multiplier) {
 
 //*****************************************************************************
 double LatLonToDouble(const char *data, const char sign) {
-  double val=atof(data);
-  double deg=floor(val/100);
+  double val=NMEA0183GetDouble(data);
 
-  val=deg+(val-deg*100.0)/60.0;
-  if ( sign=='S' || sign=='W' ) val=-val;
+  if ( val!=NMEA0183DoubleNA ) {
+    double deg=floor(val/100);
+
+    val=deg+(val-deg*100.0)/60.0;
+    if ( sign=='S' || sign=='W' ) val=-val;
+  }
 
   return val;
 }
 
 //*****************************************************************************
 double NMEA0183GPTimeToSeconds(const char *data) {
-  double val=atof(data);
-  double hh=floor(val/10000);
-  double mm=floor((val-hh*10000)/100);
+  double val=NMEA0183GetDouble(data);
 
-  val=hh*3600+mm*60+(val-hh*10000.0-mm*100);
+  if ( val!=NMEA0183DoubleNA ) {
+    double hh=floor(val/10000);
+    double mm=floor((val-hh*10000)/100);
+
+    val=hh*3600+mm*60+(val-hh*10000.0-mm*100);
+  }
 
   return val;
 }
 
 //*****************************************************************************
-time_t NMEA0183GPSDateTimetotime_t(const char *dateStr, const char *timeStr) {
+time_t NMEA0183GPSDateTimetotime_t(const char *dateStr, const char *timeStr, time_t defDate) {
   tmElements_t TimeElements;
   char StrCvt[3]="00";
+
+    if (dateStr!=0 && strlen(dateStr)==6) {
+      StrCvt[0]=dateStr[0]; StrCvt[1]=dateStr[1];
+      tNMEA0183Msg::SetDay(TimeElements,atoi(StrCvt));
+      StrCvt[0]=dateStr[2]; StrCvt[1]=dateStr[3];
+      tNMEA0183Msg::SetMonth(TimeElements,atoi(StrCvt));
+      StrCvt[0]=dateStr[4]; StrCvt[1]=dateStr[5];
+      tNMEA0183Msg::SetYear(TimeElements,2000+atoi(StrCvt));
+    } else {
+      if ( NMEA0183IsNA(defDate) ) return defDate;
+
+      breakTime(defDate,TimeElements);
+    }
 
     if (timeStr!=0 && strlen(timeStr)>=6) {
       StrCvt[0]=timeStr[0]; StrCvt[1]=timeStr[1];
@@ -120,19 +139,6 @@ time_t NMEA0183GPSDateTimetotime_t(const char *dateStr, const char *timeStr) {
       tNMEA0183Msg::SetHour(TimeElements,0);
       tNMEA0183Msg::SetMin(TimeElements,0);
       tNMEA0183Msg::SetSec(TimeElements,0);
-    }
-
-    if (dateStr!=0 && strlen(dateStr)==6) {
-      StrCvt[0]=dateStr[0]; StrCvt[1]=dateStr[1];
-      tNMEA0183Msg::SetDay(TimeElements,atoi(StrCvt));
-      StrCvt[0]=dateStr[2]; StrCvt[1]=dateStr[3];
-      tNMEA0183Msg::SetMonth(TimeElements,atoi(StrCvt));
-      StrCvt[0]=dateStr[4]; StrCvt[1]=dateStr[5];
-      tNMEA0183Msg::SetYear(TimeElements,2000+atoi(StrCvt));
-    } else {
-      tNMEA0183Msg::SetYear(TimeElements,0);
-      tNMEA0183Msg::SetMonth(TimeElements,0);
-      tNMEA0183Msg::SetDay(TimeElements,0);
     }
 
     return tNMEA0183Msg::makeTime(TimeElements);
@@ -177,6 +183,7 @@ bool NMEA0183SetDBx(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, doub
       return NMEA0183SetDBK(NMEA0183Msg,Depth,Src);
     }
   }
+
   return NMEA0183SetDBT(NMEA0183Msg,DepthBelowTransducer,Src);
 }
 
@@ -238,12 +245,12 @@ bool NMEA0183ParseGGA_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, doubl
     Longitude=LatLonToDouble(NMEA0183Msg.Field(3),NMEA0183Msg.Field(4)[0]);
     GPSQualityIndicator=atoi(NMEA0183Msg.Field(5));
     SatelliteCount=atoi(NMEA0183Msg.Field(6));
-    HDOP=atof(NMEA0183Msg.Field(7));
-    Altitude=atof(NMEA0183Msg.Field(8));
+    HDOP=NMEA0183GetDouble(NMEA0183Msg.Field(7));
+    Altitude=NMEA0183GetDouble(NMEA0183Msg.Field(8));
     // Check units of antenna altitude NMEA0183Msg.Field(9)
-    GeoidalSeparation=atof(NMEA0183Msg.Field(10));
+    GeoidalSeparation=NMEA0183GetDouble(NMEA0183Msg.Field(10));
     // Check units of GeoidalSeparation NMEA0183Msg.Field(11)
-    DGPSAge=atof(NMEA0183Msg.Field(12));
+    DGPSAge=NMEA0183GetDouble(NMEA0183Msg.Field(12));
     DGPSReferenceStationID=atoi(NMEA0183Msg.Field(13));
   }
 
@@ -349,10 +356,14 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, char 
     SOG=atof(NMEA0183Msg.Field(6))*knToms;
     TrueCOG=atof(NMEA0183Msg.Field(7))*degToRad;
 
-    lDT=NMEA0183GPSDateTimetotime_t(NMEA0183Msg.Field(8),0)+floor(GPSTime);
-    DaysSince1970=tNMEA0183Msg::elapsedDaysSince1970(lDT);
+    lDT=NMEA0183GPSDateTimetotime_t(NMEA0183Msg.Field(8),0);
+    if ( !NMEA0183IsNA(lDT) ) {
+      if ( !NMEA0183IsNA(GPSTime) ) lDT+=floor(GPSTime);
+      DaysSince1970=tNMEA0183Msg::elapsedDaysSince1970(lDT);
+    } else DaysSince1970=NMEA0183UInt32NA;
     if (DateTime!=0) *DateTime=lDT;
-    Variation=atof(NMEA0183Msg.Field(9))*degToRad; if (NMEA0183Msg.Field(10)[0]=='W') Variation=-Variation;
+    Variation=NMEA0183GetDouble(NMEA0183Msg.Field(9),degToRad);
+    if ( Variation!=NMEA0183DoubleNA && NMEA0183Msg.Field(10)[0]=='W') Variation=-Variation;
   }
 
   return result;
@@ -401,12 +412,11 @@ bool NMEA0183ParseVTG_nc(const tNMEA0183Msg &NMEA0183Msg, double &TrueCOG, doubl
   bool result=( NMEA0183Msg.FieldCount()>=8 );
 
   if ( result ) {
-    TrueCOG=atof(NMEA0183Msg.Field(0))*degToRad;
-    MagneticCOG=atof(NMEA0183Msg.Field(2))*degToRad;
-    if (NMEA0183Msg.Field(6)[0]!=0) {  // km/h is valid
-      SOG=atof(NMEA0183Msg.Field(6))*kmhToms;
-    } else {
-      SOG=atof(NMEA0183Msg.Field(4))*knToms;
+    TrueCOG=NMEA0183GetDouble(NMEA0183Msg.Field(0),degToRad);
+    MagneticCOG=NMEA0183GetDouble(NMEA0183Msg.Field(2),degToRad);
+    SOG=NMEA0183GetDouble(NMEA0183Msg.Field(6),kmhToms);
+    if ( SOG==NMEA0183DoubleNA ) {  // km/h is not valid
+      SOG=NMEA0183GetDouble(NMEA0183Msg.Field(4),knToms);
     }
   }
 
@@ -515,7 +525,7 @@ bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double Magnet
 bool NMEA0183ParseROT_nc(const tNMEA0183Msg &NMEA0183Msg,double &RateOfTurn) {
   bool result=( NMEA0183Msg.FieldCount()>=2 );
   if ( result ) {
-    RateOfTurn=atof(NMEA0183Msg.Field(0))*degToRad;
+    RateOfTurn=NMEA0183GetDouble(NMEA0183Msg.Field(0),degToRad);
   }
 
   return result;
@@ -532,7 +542,7 @@ bool NMEA0183SetROT(tNMEA0183Msg &NMEA0183Msg, double RateOfTurn, const char *Sr
 bool NMEA0183ParseHDT_nc(const tNMEA0183Msg &NMEA0183Msg,double &TrueHeading) {
   bool result=( NMEA0183Msg.FieldCount()>=2 );
   if ( result ) {
-    TrueHeading=atof(NMEA0183Msg.Field(0))*degToRad;
+    TrueHeading=NMEA0183GetDouble(NMEA0183Msg.Field(0),degToRad);
   }
 
   return result;
@@ -550,7 +560,7 @@ bool NMEA0183SetHDT(tNMEA0183Msg &NMEA0183Msg, double Heading, const char *Src) 
 bool NMEA0183ParseHDM_nc(const tNMEA0183Msg &NMEA0183Msg,double &MagneticHeading) {
   bool result=( NMEA0183Msg.FieldCount()>=2 );
   if ( result ) {
-    MagneticHeading=atof(NMEA0183Msg.Field(0))*degToRad;
+    MagneticHeading=NMEA0183GetDouble(NMEA0183Msg.Field(0),degToRad);
   }
 
   return result;
@@ -747,13 +757,13 @@ bool NMEA0183ParseMWV_nc(const tNMEA0183Msg &NMEA0183Msg,double &WindAngle, tNME
   bool result=( NMEA0183Msg.FieldCount()>=4 );
 
   if ( result ) {
-    WindAngle=atof(NMEA0183Msg.Field(0));
+    WindAngle=NMEA0183GetDouble(NMEA0183Msg.Field(0));
     switch ( NMEA0183Msg.Field(1)[0] ) {
       case 'T' : Reference=NMEA0183Wind_True; break;
       case 'R' :
       default : Reference=NMEA0183Wind_Apparent; break;
     }
-    WindSpeed=atof(NMEA0183Msg.Field(2));
+    WindSpeed=NMEA0183GetDouble(NMEA0183Msg.Field(2));
     switch ( NMEA0183Msg.Field(3)[0] ) {
       case 'K' : WindSpeed*=kmhToms; break;
       case 'N' : WindSpeed*=knToms; break;

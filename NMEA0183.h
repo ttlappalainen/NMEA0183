@@ -1,7 +1,7 @@
 /*
 NMEA0183.h
 
-Copyright (c) 2015-2021 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -57,6 +57,7 @@ class tNMEA0183
   public:
     tNMEA0183(tNMEA0183Stream *stream=0, uint8_t _SourceID=0);
     void SetMessageStream(tNMEA0183Stream *stream, uint8_t _SourceID=0);
+    tNMEA0183Stream *GetMessageStream() const { return port; }
     bool Open();
     #ifdef ARDUINO
     // Begin is obsolete. Use Open(...)

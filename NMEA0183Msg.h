@@ -1,7 +1,7 @@
 /*
 NMEA0183Msg.h
 
-Copyright (c) 2015-2021 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -36,6 +36,8 @@ const uint16_t NMEA0183UInt16NA=0xffff;
 const int16_t  NMEA0183Int16NA=0x7fff;
 const uint32_t NMEA0183UInt32NA=0xffffffff;
 const int32_t  NMEA0183Int32NA=0x7fffffff;
+const int64_t  NMEA0183Int64NA=0x7fffffffffffffffLL;
+const time_t   NMEA0183time_tNA=(sizeof(time_t)==4?NMEA0183Int32NA:NMEA0183Int64NA);
 
 inline bool NMEA0183IsNA(double v) { return v==NMEA0183DoubleNA; }
 inline bool NMEA0183IsNA(uint8_t v) { return v==NMEA0183UInt8NA; }
@@ -44,6 +46,7 @@ inline bool NMEA0183IsNA(uint16_t v) { return v==NMEA0183UInt16NA; }
 inline bool NMEA0183IsNA(int16_t v) { return v==NMEA0183Int16NA; }
 inline bool NMEA0183IsNA(uint32_t v) { return v==NMEA0183UInt32NA; }
 inline bool NMEA0183IsNA(int32_t v) { return v==NMEA0183Int32NA; }
+inline bool NMEA0183IsNA(int64_t v) { return v==NMEA0183Int64NA; }
 
 #define MAX_NMEA0183_MSG_LEN 81  // According to NMEA 3.01. Can not contain multi message as in AIS
 #define MAX_NMEA0183_MSG_FIELDS 20
@@ -56,7 +59,7 @@ typedef tm tmElements_t;
 class tNMEA0183Msg
 {
   protected:
-    static const char *EmptyField;
+    static const char *const EmptyField;
     unsigned long _MessageTime;
     char Data[MAX_NMEA0183_MSG_LEN];
     uint8_t iAddData;
@@ -75,13 +78,13 @@ class tNMEA0183Msg
   public:
     #ifdef _Time_h
     static inline void SetYear(tmElements_t &TimeElements, int val) { TimeElements.Year=val-1970; } //
-    static inline void SetMonth(tmElements_t &TimeElements, int val) { TimeElements.Month=val>0?val-1:val; }
+    static inline void SetMonth(tmElements_t &TimeElements, int val) { TimeElements.Month=val; }
     static inline void SetDay(tmElements_t &TimeElements, int val) { TimeElements.Day=val; }
     static inline void SetHour(tmElements_t &TimeElements, int val) { TimeElements.Hour=val; }
     static inline void SetMin(tmElements_t &TimeElements, int val) { TimeElements.Minute=val; }
     static inline void SetSec(tmElements_t &TimeElements, int val) { TimeElements.Second=val; }
     static inline int GetYear(const tmElements_t &TimeElements) { return TimeElements.Year+1970; }
-    static inline int GetMonth(const tmElements_t &TimeElements) { return TimeElements.Month+1; }
+    static inline int GetMonth(const tmElements_t &TimeElements) { return TimeElements.Month; }
     static inline int GetDay(const tmElements_t &TimeElements) { return TimeElements.Day; }
     static inline time_t makeTime(tmElements_t &TimeElements) { return ::makeTime(TimeElements); }
     static inline void breakTime(time_t time, tmElements_t &TimeElements) { ::breakTime(time,TimeElements); }
@@ -106,7 +109,7 @@ class tNMEA0183Msg
 
   public:
     uint8_t SourceID;  // This is used to separate messages e.g. from different ports. Receiver must set this.
-    static const char *DefDoubleFormat;
+    static const char *const DefDoubleFormat;
 
   public:
     tNMEA0183Msg();
