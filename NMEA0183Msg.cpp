@@ -97,12 +97,12 @@ bool tNMEA0183Msg::SetMessage(const char *buf) {
     Data[iData]=buf[i];
     if (buf[i]==',') { // New field
       Data[iData]=0; // null termination for previous field
-      Fields[_FieldCount]=iData+1;   // Set start of field
-      _FieldCount++;
       if (_FieldCount >= MAX_NMEA0183_MSG_FIELDS ) {
         Clear();
         return false;
       }
+      Fields[_FieldCount]=iData+1;   // Set start of field
+      _FieldCount++;
     }
   }
 
