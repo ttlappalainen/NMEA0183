@@ -123,9 +123,9 @@ time_t NMEA0183GPSDateTimetotime_t(const char *dateStr, const char *timeStr, tim
       StrCvt[0]=dateStr[4]; StrCvt[1]=dateStr[5];
       tNMEA0183Msg::SetYear(TimeElements,2000+atoi(StrCvt));
     } else {
-      if ( NMEA0183IsNA(defDate) ) return defDate;
+      if ( NMEA0183IsTimeNA(defDate) ) return defDate;
 
-      breakTime(defDate,TimeElements);
+      tNMEA0183Msg::breakTime(defDate,TimeElements);
     }
 
     if (timeStr!=0 && strlen(timeStr)>=6) {
@@ -357,7 +357,7 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, char 
     TrueCOG=atof(NMEA0183Msg.Field(7))*degToRad;
 
     lDT=NMEA0183GPSDateTimetotime_t(NMEA0183Msg.Field(8),0);
-    if ( !NMEA0183IsNA(lDT) ) {
+    if ( !NMEA0183IsTimeNA(lDT) ) {
       if ( !NMEA0183IsNA(GPSTime) ) lDT+=floor(GPSTime);
       DaysSince1970=tNMEA0183Msg::elapsedDaysSince1970(lDT);
     } else DaysSince1970=NMEA0183UInt32NA;

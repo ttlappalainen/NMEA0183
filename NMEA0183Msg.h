@@ -47,6 +47,7 @@ inline bool NMEA0183IsNA(int16_t v) { return v==NMEA0183Int16NA; }
 inline bool NMEA0183IsNA(uint32_t v) { return v==NMEA0183UInt32NA; }
 inline bool NMEA0183IsNA(int32_t v) { return v==NMEA0183Int32NA; }
 inline bool NMEA0183IsNA(int64_t v) { return v==NMEA0183Int64NA; }
+inline bool NMEA0183IsTimeNA(time_t v) { return v==NMEA0183time_tNA; }
 
 #define MAX_NMEA0183_MSG_LEN 81  // According to NMEA 3.01. Can not contain multi message as in AIS
 #define MAX_NMEA0183_MSG_FIELDS 20
