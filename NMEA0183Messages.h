@@ -185,6 +185,11 @@ struct tGSV {
 
 struct tAPB {
 
+	//Bearing (present position) to waypoint
+	double btw;
+	//Bearing (original position) to waypoint
+	double botw;
+	double headingToSteer;
 	//V = Loran-C Blink or SNR warning V = general warning flag or other navigation systems when a reliable fix is not available
 	//'A' = OK, 'V' = Void (warning)
 	char status;
@@ -198,13 +203,8 @@ struct tAPB {
 	//Perpendicular passed at waypoint
 	//'A' = passed, 'V' = not passed
 	char perpendicularPassed;
-	//Bearing (present position) to waypoint
-	double btw;
 	char btwMode; //M = Magnetic, T = True
-	//Bearing (original position) to waypoint
-	double botw;
 	char botwMode; //M = Magnetic, T = True
-	double headingToSteer;
 	char headingToSteerMode; //M = Magnetic, T = True
     char destID[NMEA0183_MAX_WP_NAME_LENGTH];
 };
