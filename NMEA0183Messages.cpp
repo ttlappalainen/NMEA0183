@@ -891,6 +891,39 @@ bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, time_t &DateTime, long &T
 
   return result;
 }
-	  
-	  
-	  
+
+//*****************************************************************************
+bool NMEA0183ParseAPB_nc(const tNMEA0183Msg &NMEA0183Msg, tAPB &APB) {
+
+  bool result=( NMEA0183Msg.FieldCount()>=14 );
+
+  if ( result ) {
+
+    APB.status=NMEA0183Msg.Field(0)[0];
+    APB.cycleLockWarning=NMEA0183Msg.Field(1)[0];
+    APB.xte=NMEA0183GetDouble(NMEA0183Msg.Field(2));
+    //Left is negative in NMEA2000. Right is positive.
+    if (NMEA0183Msg.Field(3)[0]=='R') {
+      APB.xte=-APB.xte;
+    }
+    if (NMEA0183Msg.Field(4)[0]=='N') {
+      APB.xte * nmTom;
+    } else {
+      //Don't know which other units to expect and which indicator they use.
+      return false;
+    }
+    APB.arrivalAlarm=NMEA0183Msg.Field(5)[0];
+    APB.perpendicularPassed=NMEA0183Msg.Field(6)[0];
+    APB.botw=NMEA0183GetDouble(NMEA0183Msg.Field(7))*degToRad;
+    APB.botwMode=NMEA0183Msg.Field(8)[0];
+    strncpy(APB.destID,NMEA0183Msg.Field(9),sizeof(APB.destID)/sizeof(char));
+    APB.destID[sizeof(APB.destID)/sizeof(char)-1]='\0';
+    APB.btw=NMEA0183GetDouble(NMEA0183Msg.Field(10))*degToRad;
+    APB.btwMode=NMEA0183Msg.Field(11)[0];
+    APB.headingToSteer=NMEA0183GetDouble(NMEA0183Msg.Field(12))*degToRad;
+    APB.headingToSteerMode=NMEA0183Msg.Field(13)[0];
+  }
+
+  return result;
+
+}

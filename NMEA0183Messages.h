@@ -183,6 +183,32 @@ struct tGSV {
 	double		SNR;
 };
 
+struct tAPB {
+
+	//Bearing (present position) to waypoint
+	double btw;
+	//Bearing (original position) to waypoint
+	double botw;
+	double headingToSteer;
+	//V = Loran-C Blink or SNR warning V = general warning flag or other navigation systems when a reliable fix is not available
+	//'A' = OK, 'V' = Void (warning)
+	char status;
+	//V = Loran-C Cycle Lock warning flag A = OK or not used
+	char cycleLockWarning;
+	//XTE includes magnitude, direction to steer and units (meters)
+	double xte;
+	//Arrival Circle Entered
+	//'A' = arrived, 'V' = not arrived
+	char arrivalAlarm;
+	//Perpendicular passed at waypoint
+	//'A' = passed, 'V' = not passed
+	char perpendicularPassed;
+	char btwMode; //M = Magnetic, T = True
+	char botwMode; //M = Magnetic, T = True
+	char headingToSteerMode; //M = Magnetic, T = True
+    char destID[NMEA0183_MAX_WP_NAME_LENGTH];
+};
+
 enum tNMEA0183WindReference {
                             NMEA0183Wind_True=0,
                             // Apparent Wind (relative to the vessel centerline)
@@ -470,5 +496,16 @@ inline bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, tZDA &zda) {
 
 	return NMEA0183ParseZDA(NMEA0183Msg, zda.GPSTime, zda.GPSDay, zda.GPSMonth, zda.GPSYear, zda.LZD, zda.LZMD);
 }
+
+//*****************************************************************************
+//$GPAPB,A,A,0.10,R,N,V,V,011,M,DEST,011,M,011,M*82
+bool NMEA0183ParseAPB_nc(const tNMEA0183Msg &NMEA0183Msg, tAPB &apb);
+
+inline bool NMEA0183ParseAPB(const tNMEA0183Msg &NMEA0183Msg, tAPB &apb) {
+    return (NMEA0183Msg.IsMessageCode("APB") ?
+        NMEA0183ParseAPB_nc(NMEA0183Msg, apb) : false);
+}
+
+
 
 #endif
