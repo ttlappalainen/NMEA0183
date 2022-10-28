@@ -6,9 +6,13 @@ struct tBoatData {
   
   double TrueHeading,SOG,COG,Variation,
          GPSTime,// Secs since midnight,
-         Latitude, Longitude, Altitude, HDOP, GeoidalSeparation, DGPSAge;
+         Latitude, Longitude, Altitude, HDOP, GeoidalSeparation, DGPSAge,
+         WaterTemperature, WaterDepth, Offset,
+         WindDirectionT, WindDirectionM, WindSpeedK, WindSpeedM,
+         WindAngle ;
   int GPSQualityIndicator, SatelliteCount, DGPSReferenceStationID;
   bool MOBActivated;
+  char Status;
 
 public:
   tBoatData() {
@@ -17,9 +21,12 @@ public:
     COG=0; 
     Variation=7.0;
     GPSTime=0;
+    Latitude = 0;
+    Longitude = 0;
     Altitude=0;
     HDOP=100000;
     DGPSAge=100000;
+    WaterTemperature = 0;
     DaysSince1970=0; 
     MOBActivated=false; 
     SatelliteCount=0; 
@@ -28,4 +35,3 @@ public:
 };
 
 #endif // _BoatData_H_
-
