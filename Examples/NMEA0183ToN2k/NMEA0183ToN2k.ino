@@ -37,6 +37,9 @@ tBoatData BoatData;
 tNMEA0183 NMEA0183_3;
 
 void setup() {
+  uint8_t chipid[6];
+  uint32_t id = 0;
+  int i = 0;
 
   // Setup NMEA2000 system
   Serial.begin(115200);
@@ -47,7 +50,10 @@ void setup() {
                                  "1.0.0.0 (2015-11-18)" // Manufacturer's Model version
                                  );
   // Det device information
-  NMEA2000.SetDeviceInformation(8, // Unique number. Use e.g. Serial number.
+  esp_efuse_mac_get_default(chipid);
+  for (i = 0; i < 6; i++) id += (chipid[i] << (7 * i));
+
+  NMEA2000.SetDeviceInformation(id, // Unique number. Use e.g. Serial number.
                                 130, // Device function=PC Gateway. See codes on http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20%26%20function%20codes%20v%202.00.pdf
                                 25, // Device class=Inter/Intranetwork Device. See codes on http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20%26%20function%20codes%20v%202.00.pdf
                                 2046 // Just choosen free from code list on http://www.nmea.org/Assets/20121020%20nmea%202000%20registration%20list.pdf                               
