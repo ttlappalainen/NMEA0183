@@ -37,9 +37,12 @@ tBoatData BoatData;
 tNMEA0183 NMEA0183_3;
 
 void setup() {
-  uint8_t chipid[6];
-  uint32_t id = 0;
+#ifdef ESP32  
   int i = 0;
+  uint8_t chipid[6];
+#endif
+  uint32_t id = 8; //Unique device number. Use e.g. Serial number 
+
 
   // Setup NMEA2000 system
   Serial.begin(115200);
@@ -50,9 +53,10 @@ void setup() {
                                  "1.0.0.0 (2015-11-18)" // Manufacturer's Model version
                                  );
   // Det device information
+#ifdef ESP32
   esp_efuse_mac_get_default(chipid);
   for (i = 0; i < 6; i++) id += (chipid[i] << (7 * i));
-
+#endif
   NMEA2000.SetDeviceInformation(id, // Unique number. Use e.g. Serial number.
                                 130, // Device function=PC Gateway. See codes on http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20%26%20function%20codes%20v%202.00.pdf
                                 25, // Device class=Inter/Intranetwork Device. See codes on http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20%26%20function%20codes%20v%202.00.pdf
@@ -69,8 +73,8 @@ void setup() {
   InitNMEA0183Handlers(&NMEA2000, &BoatData);
   NMEA0183_3.SetMsgHandler(HandleNMEA0183Msg);
 
-  Serial3.begin(19200);
-  NMEA0183_3.SetMessageStream(&Serial3);
+  Serial2.begin(19200);
+  NMEA0183_3.SetMessageStream(&Serial2);
   NMEA0183_3.Open();
 }
 
@@ -93,5 +97,3 @@ void SendSystemTime() {
     NMEA2000.SendMsg(N2kMsg);
   }
 }
-
-
