@@ -40,7 +40,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	RMB	-	Recommended Minimum Navigation Information
 	RMC	-	Recommended Minimum Navigation Information
 	ROT	-	Rate of Turn
-***	RPM	-	Revololutions
+***	RPM	-	Revolutions
 	RTE	-	Routes
 	VHW	-	Water Speed and Heading
 	VTG	-	Track Made Good and Ground Speed
