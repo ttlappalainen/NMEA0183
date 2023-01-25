@@ -29,4 +29,3 @@ void HandleNMEA0183Msg(const tNMEA0183Msg &NMEA0183Msg);
 
 #endif
 
-
