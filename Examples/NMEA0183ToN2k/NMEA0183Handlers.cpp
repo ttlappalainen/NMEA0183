@@ -24,17 +24,11 @@ struct tNMEA0183Handler {
   void (*Handler)(const tNMEA0183Msg &NMEA0183Msg); 
 };
 
-
 // Predefinition for functions to make it possible for constant definition for NMEA0183Handlers
 void HandleRMC(const tNMEA0183Msg &NMEA0183Msg);
 void HandleGGA(const tNMEA0183Msg &NMEA0183Msg);
 void HandleHDT(const tNMEA0183Msg &NMEA0183Msg);
 void HandleVTG(const tNMEA0183Msg &NMEA0183Msg);
-void HandleMWD(const tNMEA0183Msg &NMEA0183Msg); // Wind direction and speed
-void HandleMWV(const tNMEA0183Msg &NMEA0183Msg); // Wind speed and angle
-void HandleMTW(const tNMEA0183Msg &NMEA0183Msg); // Water Temperature
-void HandleDPT(const tNMEA0183Msg &NMEA0183Msg); // Water Depth
-void HandleGLL(const tNMEA0183Msg &NMEA0183Msg); // Lat/long 
 
 // Internal variables
 tNMEA2000 *pNMEA2000=0;
@@ -46,11 +40,6 @@ tNMEA0183Handler NMEA0183Handlers[]={
   {"HDT",&HandleHDT},
   {"VTG",&HandleVTG},
   {"RMC",&HandleRMC},
-  {"GLL",&HandleGLL},
-  {"MTW",&HandleMTW},
-  {"DPT",&HandleDPT},
-  {"MWD",&HandleMWD},
-  {"MWV",&HandleMWV},
   {0,0}
 };
 
@@ -161,88 +150,3 @@ void HandleVTG(const tNMEA0183Msg &NMEA0183Msg) {
   } else if (NMEA0183HandlersDebugStream!=0) { NMEA0183HandlersDebugStream->println("Failed to parse VTG"); }
 }
 
-//additional functions added GLL, MTW, DPT, MTW, MWD, MWV
-
-void HandleGLL(const tNMEA0183Msg &NMEA0183Msg) {
-  if (pBD==0) return;
-  bool result = NMEA0183ParseGLL_nc(NMEA0183Msg,   pBD->Latitude ,   pBD->Longitude, pBD->GPSTime, pBD->Status);
-//    Serial.print(result); 
-    if (pNMEA2000!=0) {
-      tN2kMsg N2kMsg;
-      pNMEA2000->SendMsg(N2kMsg); 
-    }
-    if (NMEA0183HandlersDebugStream!=0) {
-      NMEA0183HandlersDebugStream->print("Latitude="); NMEA0183HandlersDebugStream->println(pBD->Latitude,5);
-      NMEA0183HandlersDebugStream->print("Longitude="); NMEA0183HandlersDebugStream->println(pBD->Longitude,5);
-    }
-//  } else if (NMEA0183HandlersDebugStream!=0) { NMEA0183HandlersDebugStream->println("Failed to parse GLL"); }
-}
-
-void HandleMTW(const tNMEA0183Msg &NMEA0183Msg) {
-  if (pBD==0) return;
-  bool result = NMEA0183ParseMTW_nc(NMEA0183Msg,   pBD->WaterTemperature);
-//
-    if (pNMEA2000!=0) {
-      tN2kMsg N2kMsg;
-      SetN2kOutsideEnvironmentalParameters(N2kMsg, 0, CToKelvin(pBD->WaterTemperature), N2kDoubleNA, N2kDoubleNA);
-      pNMEA2000->SendMsg(N2kMsg); 
-    }
-    if (NMEA0183HandlersDebugStream!=0) {
-      NMEA0183HandlersDebugStream->print("Water Temperature="); NMEA0183HandlersDebugStream->println(pBD->WaterTemperature,1);
-    }
-//  } else if (NMEA0183HandlersDebugStream!=0) { NMEA0183HandlersDebugStream->println("Failed to parse MTW"); }
-}
-
-void HandleDPT(const tNMEA0183Msg &NMEA0183Msg) {
-  if (pBD==0) return;
-  double Range=100;
-  bool result = NMEA0183ParseDPT_nc(NMEA0183Msg,   pBD->WaterDepth, pBD->Offset, Range);
-
-    if (pNMEA2000!=0) {
-      tN2kMsg N2kMsg;
-      SetN2kWaterDepth(N2kMsg, 0, pBD->WaterDepth, pBD->Offset, Range);
-      pNMEA2000->SendMsg(N2kMsg); 
-    }
-    if (NMEA0183HandlersDebugStream!=0) {
-      NMEA0183HandlersDebugStream->print("Water Depth="); NMEA0183HandlersDebugStream->println(pBD->WaterDepth,1);
-    }
-//  } else if (NMEA0183HandlersDebugStream!=0) { NMEA0183HandlersDebugStream->println("Failed to parse MTW"); }
-}
-
-void HandleMWD(const tNMEA0183Msg &NMEA0183Msg) {
-  if (pBD==0) return;
-  double Range=100;
-  bool result = NMEA0183ParseMWD_nc(NMEA0183Msg,   pBD->WindDirectionT, pBD->WindDirectionM, pBD->WindSpeedK, pBD->WindSpeedM);
-//    Serial.print(result); 
-    if (pNMEA2000!=0) {
-      tN2kMsg N2kMsg;
-      SetN2kWindSpeed(N2kMsg, 0, pBD->WindSpeedM, DegToRad(pBD->WindDirectionT), N2kWind_True_North );    
-      pNMEA2000->SendMsg(N2kMsg); 
-    }
-    if (NMEA0183HandlersDebugStream!=0) {
-      NMEA0183HandlersDebugStream->print("Wind Speed="); NMEA0183HandlersDebugStream->println(pBD->WindSpeedM,1);
-      NMEA0183HandlersDebugStream->print("Wind Direction="); NMEA0183HandlersDebugStream->println(pBD->WindDirectionT,1);   
-    }
-//  } else if (NMEA0183HandlersDebugStream!=0) { NMEA0183HandlersDebugStream->println("Failed to parse MWD"); }
-}
-
-void HandleMWV(const tNMEA0183Msg &NMEA0183Msg) {
-  if (pBD==0) return;
-  tNMEA0183WindReference WindReference;
-  tN2kWindReference N2kWindReference;
-  bool result = NMEA0183ParseMWV_nc(NMEA0183Msg,   pBD->WindDirectionT, WindReference, pBD->WindSpeedM);
-  if( WindReference == NMEA0183Wind_Apparent ) {
-    N2kWindReference = N2kWind_Apparent;
-  }
-  else N2kWindReference = N2kWind_True_North;
-    if (pNMEA2000!=0) {
-      tN2kMsg N2kMsg;
-      SetN2kWindSpeed(N2kMsg, 0, pBD->WindSpeedM, DegToRad(pBD->WindDirectionT), N2kWindReference );    
-      pNMEA2000->SendMsg(N2kMsg); 
-    }
-    if (NMEA0183HandlersDebugStream!=0) {
-      NMEA0183HandlersDebugStream->print("Wind Speed="); NMEA0183HandlersDebugStream->println(pBD->WindSpeedM,1);
-      NMEA0183HandlersDebugStream->print("Wind Direction="); NMEA0183HandlersDebugStream->println(pBD->WindDirectionT,1);     
-    }
-//  } else if (NMEA0183HandlersDebugStream!=0) { NMEA0183HandlersDebugStream->println("Failed to parse MWV"); }
-}
