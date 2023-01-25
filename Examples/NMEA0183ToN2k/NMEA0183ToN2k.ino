@@ -17,7 +17,7 @@
 #define N2K_SOURCE 15
 
 #include <Arduino.h>
-#include <Time.h>
+#include <time.h>
 #include <N2kMsg.h>
 #include <NMEA2000.h>
 #include <N2kMessages.h>
@@ -63,8 +63,8 @@ void setup() {
   InitNMEA0183Handlers(&NMEA2000, &BoatData);
   NMEA0183_3.SetMsgHandler(HandleNMEA0183Msg);
 
-  Serial3.begin(19200);
-  NMEA0183_3.SetMessageStream(&Serial3);
+  Serial2.begin(19200);
+  NMEA0183_3.SetMessageStream(&Serial2);
   NMEA0183_3.Open();
 }
 

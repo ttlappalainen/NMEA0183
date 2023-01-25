@@ -16,7 +16,7 @@ Author: Timo Lappalainen
 #ifndef _NMEA0183Handlers_H_
 #define _NMEA0183Handlers_H_
 #include <Arduino.h>
-#include <Time.h>
+#include <time.h>
 #include <NMEA0183.h>
 #include <NMEA0183Msg.h>
 #include <NMEA2000.h>
