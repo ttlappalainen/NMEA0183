@@ -21,6 +21,34 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
+/* list of NMEA0183 messages handled by this library
+	APB	-	Autopilot Sentence "B"
+	BOD	-	Bearing Waypoint to Waypoint
+	DBK	-	Depth below Keel
+	DBS	-	Depth below Surface
+	DBT	-	Depth below Transducer
+	DPT	-	Heading Devitation&Variation
+	GGA	-	GPS Fix Data. Time, Position etc
+	GLL	-	Geographic Positions - Latitude/Longitude
+	GSV	-	Satellites in view
+	HDG	-	Heading - Deviation and Variation
+	HDM	-	Heading Magnetic	
+	HDT	-	Heading True
+***	MWD	-	Wind Direction and Speed
+***	MTW	-	Water Temperature
+	MWV	-	Wind Speed and Angle
+	RMB	-	Recommended Minimum Navigation Information
+	RMC	-	Recommended Minimum Navigation Information
+	ROT	-	Rate of Turn
+***	RPM	-	Revolutions
+	RTE	-	Routes
+	VHW	-	Water Speed and Heading
+	VTG	-	Track Made Good and Ground Speed
+	WPL	-	Waypoint location
+	ZDA	-	Time & Date
+	VDM	-	AIS multiple vessels
+	VDO	-	AIS own vessel
+*/
 
 #include "NMEA0183Messages.h"
 #include <math.h>
