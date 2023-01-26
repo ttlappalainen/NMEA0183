@@ -29,19 +29,28 @@ void HandleRMC(const tNMEA0183Msg &NMEA0183Msg);
 void HandleGGA(const tNMEA0183Msg &NMEA0183Msg);
 void HandleHDT(const tNMEA0183Msg &NMEA0183Msg);
 void HandleVTG(const tNMEA0183Msg &NMEA0183Msg);
+void HandleMWD(const tNMEA0183Msg &NMEA0183Msg); // Wind direction and speed
+void HandleMWV(const tNMEA0183Msg &NMEA0183Msg); // Wind speed and angle
+void HandleMTW(const tNMEA0183Msg &NMEA0183Msg); // Water Temperature
+void HandleDPT(const tNMEA0183Msg &NMEA0183Msg); // Water Depth
+void HandleGLL(const tNMEA0183Msg &NMEA0183Msg); // Lat/long
 
 // Internal variables
 tNMEA2000 *pNMEA2000=0;
 tBoatData *pBD=0;
 Stream* NMEA0183HandlersDebugStream=0;
 
-tNMEA0183Handler NMEA0183Handlers[]={
-  {"GGA",&HandleGGA},
-  {"HDT",&HandleHDT},
-  {"VTG",&HandleVTG},
-  {"RMC",&HandleRMC},
-  {0,0}
-};
+tNMEA0183Handler NMEA0183Handlers[] = {
+    {"GGA", &HandleGGA},
+    {"HDT", &HandleHDT},
+    {"VTG", &HandleVTG},
+    {"RMC", &HandleRMC},
+    {"GLL", &HandleGLL},
+    {"MTW", &HandleMTW},
+    {"DPT", &HandleDPT},
+    {"MWD", &HandleMWD},
+    {"MWV", &HandleMWV},
+    {0, 0}};
 
 void InitNMEA0183Handlers(tNMEA2000 *_NMEA2000, tBoatData *_BoatData) {
   pNMEA2000=_NMEA2000;
@@ -150,3 +159,27 @@ void HandleVTG(const tNMEA0183Msg &NMEA0183Msg) {
   } else if (NMEA0183HandlersDebugStream!=0) { NMEA0183HandlersDebugStream->println("Failed to parse VTG"); }
 }
 
+void HandleGLL(const tNMEA0183Msg &NMEA0183Msg)
+{
+
+}
+
+void HandleMTW(const tNMEA0183Msg &NMEA0183Msg)
+{
+
+}
+
+void HandleDPT(const tNMEA0183Msg &NMEA0183Msg)
+{
+
+}
+
+void HandleMWD(const tNMEA0183Msg &NMEA0183Msg)
+{
+
+}
+
+void HandleMWV(const tNMEA0183Msg &NMEA0183Msg)
+{
+
+}
