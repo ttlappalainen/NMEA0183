@@ -256,8 +256,10 @@ inline bool NMEA0183ParseDPT(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelo
             :false);
 }
 
+// The depth and offset are limited to two decimal places using the rounding rules of printf.
 bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src="II");
 
+// The depth and offset are limited to two decimal places using the rounding rules of printf.
 bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src="II");
 
 
