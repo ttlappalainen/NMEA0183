@@ -892,6 +892,23 @@ bool NMEA0183ParseZDA(const tNMEA0183Msg &NMEA0183Msg, time_t &DateTime, long &T
   return result;
 }
 
+bool NMEA0183SetZDA(tNMEA0183Msg& NMEA0183Msg, double GPSTime, int GPSDay, int GPSMonth, int GPSYear, int LZD, int LZMD, const char* Src)
+{
+    char tmp[10];
+    if (!NMEA0183Msg.Init("ZDA", Src)) return false;
+    if (!NMEA0183Msg.AddTimeField(GPSTime)) return false;
+    sprintf(tmp, "%02d", GPSDay);
+    if (!NMEA0183Msg.AddStrField(tmp)) return false;
+    sprintf(tmp, "%02d", GPSMonth);
+    if (!NMEA0183Msg.AddStrField(tmp)) return false;
+    if (!NMEA0183Msg.AddUInt32Field(GPSYear)) return false;
+    sprintf(tmp, "%02d", LZD);
+    if (!NMEA0183Msg.AddStrField(tmp)) return false;
+    sprintf(tmp, "%02d", LZMD);
+    if (!NMEA0183Msg.AddStrField(tmp)) return false;
+    return true;
+}
+
 //*****************************************************************************
 bool NMEA0183ParseAPB_nc(const tNMEA0183Msg &NMEA0183Msg, tAPB &APB) {
 
