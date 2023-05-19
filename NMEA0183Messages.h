@@ -256,21 +256,9 @@ inline bool NMEA0183ParseDPT(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelo
             :false);
 }
 
-bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *DepthFormat, const char *Src);
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src="II", const char *DepthFormat=tNMEA0183Msg::DefDoubleFormat);
 
-// Depth and offset are rounded to 1 decimal place after comma.
-inline bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src="II") {
-  return NMEA0183SetDPT(NMEA0183Msg,DepthBelowTransducer,Offset,Range,tNMEA0183Msg::DefDoubleFormat,Src);
-}
-
-// Depth and offset are rounded to 1 decimal place after comma.
-bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *DepthFormat, const char *Src);
-
-inline bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src="II")
-{
-  return NMEA0183SetDPT(NMEA0183Msg,DepthBelowTransducer,Offset,tNMEA0183Msg::DefDoubleFormat,Src);
-}
-
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src="II", const char *DepthFormat=tNMEA0183Msg::DefDoubleFormat);
 
 
 //*****************************************************************************

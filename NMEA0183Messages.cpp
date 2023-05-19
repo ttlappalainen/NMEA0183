@@ -216,7 +216,7 @@ bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTra
 	return result;
 }
 
-bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *DepthFormat, const char *Src) {
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src, const char *DepthFormat) {
   if ( !NMEA0183Msg.Init("DPT",Src) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer, 1, DepthFormat) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(Offset, 1, DepthFormat) ) return false;
@@ -224,7 +224,7 @@ bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, doub
   return true;
 }
 
-bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *DepthFormat, const char *Src) {
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src, const char *DepthFormat) {
   if ( !NMEA0183Msg.Init("DPT",Src) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer, 1, DepthFormat) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(Offset, 1, DepthFormat) ) return false;
