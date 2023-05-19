@@ -26,7 +26,7 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define _tNMEA0183_MESSAGES_H_
 #include <stdio.h>
 #include <time.h>
-#include <NMEA0183Msg.h>
+#include "NMEA0183Msg.h"
 
 #ifndef Arduino
 typedef uint8_t byte;
