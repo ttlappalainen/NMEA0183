@@ -907,7 +907,7 @@ bool NMEA0183ParseAPB_nc(const tNMEA0183Msg &NMEA0183Msg, tAPB &APB) {
       APB.xte=-APB.xte;
     }
     if (NMEA0183Msg.Field(4)[0]=='N') {
-      APB.xte * nmTom;
+      APB.xte*=nmTom;
     } else {
       //Don't know which other units to expect and which indicator they use.
       return false;
