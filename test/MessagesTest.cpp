@@ -63,3 +63,13 @@ TEST_CASE("DPT after NMEA0183 v3.0")
     CHECK(NMEA0183SetDPT(dst, depth, offset, range));
   });
 }
+
+TEST_CASE("ZDA")
+{
+  test_nmea0183_message("$GPZDA,160012.71,11,03,2004,-1,00*7D", [](tNMEA0183Msg& src, tNMEA0183Msg& dst) {
+    double GPSTime;
+    int GPSDay, GPSMonth, GPSYear, LZD, LZMD;
+    CHECK(NMEA0183ParseZDA(src, GPSTime, GPSDay, GPSMonth, GPSYear, LZD, LZMD));
+    CHECK(NMEA0183SetZDA(dst, GPSTime, GPSDay, GPSMonth, GPSYear, LZD, LZMD));
+  });
+}
