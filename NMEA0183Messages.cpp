@@ -216,18 +216,18 @@ bool NMEA0183ParseDPT_nc(const tNMEA0183Msg &NMEA0183Msg,  double &DepthBelowTra
 	return result;
 }
 
-bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src) {
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, double Range, const char *Src, const char *DepthFormat) {
   if ( !NMEA0183Msg.Init("DPT",Src) ) return false;
-  if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer) ) return false;
-  if ( !NMEA0183Msg.AddDoubleField(Offset) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer, 1, DepthFormat) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Offset, 1, DepthFormat) ) return false;
   if ( !NMEA0183Msg.AddDoubleField(Range, 1, "%.0f" ) ) return false;  
   return true;
 }
 
-bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src) {
+bool NMEA0183SetDPT(tNMEA0183Msg &NMEA0183Msg, double DepthBelowTransducer, double Offset, const char *Src, const char *DepthFormat) {
   if ( !NMEA0183Msg.Init("DPT",Src) ) return false;
-  if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer) ) return false;
-  if ( !NMEA0183Msg.AddDoubleField(Offset) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(DepthBelowTransducer, 1, DepthFormat) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Offset, 1, DepthFormat) ) return false;
 
   return true;
 }
@@ -924,7 +924,7 @@ bool NMEA0183ParseAPB_nc(const tNMEA0183Msg &NMEA0183Msg, tAPB &APB) {
       APB.xte=-APB.xte;
     }
     if (NMEA0183Msg.Field(4)[0]=='N') {
-      APB.xte * nmTom;
+      APB.xte*=nmTom;
     } else {
       //Don't know which other units to expect and which indicator they use.
       return false;
@@ -943,4 +943,27 @@ bool NMEA0183ParseAPB_nc(const tNMEA0183Msg &NMEA0183Msg, tAPB &APB) {
 
   return result;
 
+}
+
+static bool AddDoubleFieldWithSign(tNMEA0183Msg& NMEA0183Msg, const double v)
+{
+    return NMEA0183Msg.AddDoubleField(v, 1, (v>=0 ? "+%.2f" : "%.2f"));
+}
+
+//*****************************************************************************
+bool NMEA0183SetSHR(tNMEA0183Msg& NMEA0183Msg, double GPSTime, const double HeadingRad, const double RollRad, const double PitchRad, double HeaveM, double RollAccuracyRad, double PitchAccuracyRad, double HeadingAccuracyRad, int GPSQualityIndicator, int INSStatusFlag, const char* Source)
+{
+  if (!NMEA0183Msg.Init("SHR", Source)) return false;
+  if (!NMEA0183Msg.AddTimeField(GPSTime)) return false;
+  if (!NMEA0183Msg.AddDoubleField(radToDeg * HeadingRad)) return false;
+  if (!NMEA0183Msg.AddStrField("T")) return false;
+  if (!AddDoubleFieldWithSign(NMEA0183Msg, radToDeg * RollRad)) return false;
+  if (!AddDoubleFieldWithSign(NMEA0183Msg, radToDeg * PitchRad)) return false;
+  if (!AddDoubleFieldWithSign(NMEA0183Msg, HeaveM)) return false;
+  if (!NMEA0183Msg.AddDoubleField(radToDeg * RollAccuracyRad, 1, "%.2f")) return false;
+  if (!NMEA0183Msg.AddDoubleField(radToDeg * PitchAccuracyRad, 1, "%.2f")) return false;
+  if (!NMEA0183Msg.AddDoubleField(radToDeg * HeadingAccuracyRad, 1, "%.2f")) return false;
+  if (!NMEA0183Msg.AddUInt32Field(GPSQualityIndicator)) return false;
+  if (!NMEA0183Msg.AddUInt32Field(INSStatusFlag)) return false;
+  return true;
 }
