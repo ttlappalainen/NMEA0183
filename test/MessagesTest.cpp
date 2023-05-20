@@ -43,7 +43,7 @@ void test_nmea0183_message(const char* nmea0183, std::function<void(tNMEA0183Msg
   CHECK(src.SetMessage(nmea0183));
   parse_and_set(src, dst);
   CHECK(dst.GetMessage(result, sizeof(result)));
-  CHECK(strcmp(result, nmea0183) == 0);
+  CHECK_THAT(result, Catch::Matchers::Equals(nmea0183));
 }
 
 TEST_CASE("DPT before NMEA0183 v3.0")
