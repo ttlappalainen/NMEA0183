@@ -1,7 +1,7 @@
 /*
 NMEA0183Messages.h
 
-Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2023 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -339,8 +339,23 @@ inline bool NMEA0183ParseRMC(const tNMEA0183Msg &NMEA0183Msg, tRMC &rmc, time_t 
 	return NMEA0183ParseRMC(NMEA0183Msg, rmc.GPSTime, rmc.status, rmc.latitude, rmc.longitude, rmc.trueCOG, rmc.SOG, rmc.daysSince1970, rmc.variation, DateTime);
 }
 
+// NMEA 2.3 and later has FAAModeIndicator. Provide proper value:
+//   A = Autonomous mode, D = Differential Mode, E = Estimated (dead-reckoning) mode, M = Manual Input Mode,
+//   S = Simulated Mode, N = Data Not Valid
+//   or 0xff to omit the field.
+// NMEA 4.1 and later has nav status. Provide proper status:
+//   A=autonomous, D=differential, E=Estimated, M=Manual input mode N=not valid, S=Simulator, V = Valid
+//   of 0xff to omit the field
+// Note! If you provide both 0xff, fields does not exist at all. If you provide FAAModeIndicator==0xff
+// and nav status other than 0xff, FAAModeIndicator will have empty value.
 bool NMEA0183SetRMC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, double Longitude,
-                      double TrueCOG, double SOG, unsigned long DaysSince1970, double Variation, const char *Src="GP");
+                      double TrueCOG, double SOG, unsigned long DaysSince1970, double Variation,
+                      char FAAModeIndicator, char NavStatus=0xff, const char *Src="GP");
+                      
+inline bool NMEA0183SetRMC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, double Longitude,
+                      double TrueCOG, double SOG, unsigned long DaysSince1970, double Variation, const char *Src="GP") {
+  return NMEA0183SetRMC(NMEA0183Msg,GPSTime,Latitude,Longitude,TrueCOG,SOG,DaysSince1970,Variation,0xff,0xff,Src);
+}
 
 //*****************************************************************************
 // COG will be returned be in radians

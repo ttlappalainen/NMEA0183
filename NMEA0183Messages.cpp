@@ -1,7 +1,7 @@
 /*
 NMEA0183Messages.cpp
 
-Copyright (c) 2015-2022 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2023 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -371,7 +371,8 @@ bool NMEA0183ParseRMC_nc(const tNMEA0183Msg &NMEA0183Msg, double &GPSTime, char 
 
 //*****************************************************************************
 bool NMEA0183SetRMC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, double Longitude,
-                      double TrueCOG, double SOG, unsigned long DaysSince1970, double Variation, const char *Src) {
+                      double TrueCOG, double SOG, unsigned long DaysSince1970, double Variation,
+                      char FAAModeIndicator, char NavStatus, const char *Src) {
 
   if ( SOG!=NMEA0183DoubleNA && SOG<0 ) {
     if ( TrueCOG!=NMEA0183DoubleNA  ) TrueCOG+=pi;
@@ -400,6 +401,17 @@ bool NMEA0183SetRMC(tNMEA0183Msg &NMEA0183Msg, double GPSTime, double Latitude, 
   } else {
     if ( !NMEA0183Msg.AddStrField("") ) return false;
     if ( !NMEA0183Msg.AddStrField("") ) return false;
+  }
+  
+  if ( !(FAAModeIndicator==0xff || NavStatus==0xff) ) {
+    if ( FAAModeIndicator!=0xff ) {
+      if ( !NMEA0183Msg.AddStrField(FAAModeIndicator) ) return false;
+    } else {
+      if ( !NMEA0183Msg.AddStrField("") ) return false;
+    }
+    if ( NavStatus!=0xff ) {
+      if ( !NMEA0183Msg.AddStrField(NavStatus) ) return false;
+    }
   }
 
   return true;

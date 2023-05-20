@@ -31,6 +31,31 @@ Note also that paths are version depended and here 1.6.11.
 ----
 
 == Changes ==
+
+20.05.2023
+
+- Added NMEA0183SetRMC possibility to use FAA mode indicator and nav status.
+
+- Added AddStrField to NMEA0183Msg module.
+
+- Updated copyright year.
+
+- Below thanks to Andrei Errapart
+
+- Added #include <cstdlib> to compile with MSVC
+
+- Changed include #include "NMEA0183Msg.h" to double colons on NMEA0183Messages.h
+
+- NMEA0183SetSHR: New function to format pitch, roll, heave and heading in RT300 format.
+
+- Fixed NMEA0183ParseAPB_nc APB.xte *= nmTom;
+
+- NMEA0183SetDPT: added optional parameter DepthFormat to allow higher resolution on message.
+
+- Added first unit tests for SetDPT/ParseDPT
+
+- Added SetZDA.
+
 07.04.2022
 
 - Fixed use of breaktime on NMEA0183Messages.cpp to tNMEA0183Msg::breakTime and added
