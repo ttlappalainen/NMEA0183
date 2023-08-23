@@ -28,13 +28,14 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 #include "NMEA0183Stream.h"
 #include "NMEA0183Msg.h"
+#include <memory>
+#include <functional>
 
 #define MAX_NMEA0183_MSG_BUF_LEN 81  // According to NMEA 3.01. Can not contain multi message as in AIS
 
 class tNMEA0183
 {
   protected:
-    tNMEA0183Stream *port;
     size_t MsgCheckSumStartPos;
     char MsgInBuf[MAX_NMEA0183_MSG_BUF_LEN];
     size_t MsgInPos;
@@ -51,12 +52,14 @@ class tNMEA0183
     size_t MsgOutBufFreeSize() {
       return (MsgOutReadPos<MsgOutWritePos?MsgOutBufSize-(MsgOutWritePos-MsgOutReadPos):MsgOutBufSize+MsgOutReadPos-MsgOutWritePos);
     }
-    bool IsOpen() const { return ( port!=0 && MsgOutBuf!=0 ); }
+    bool IsOpen() const { return ( port && MsgOutBuf!=0 ); }
     bool SendBuf(const char *buf);
     bool CanSendByte();
+    bool SetMessage(const tNMEA0183Msg &NMEA0183Msg);
+    bool SetMessage(const std::string &message);
+    bool GetMessage(std::function<bool()> FillBuffer);
   public:
-    tNMEA0183(tNMEA0183Stream *stream=0, uint8_t _SourceID=0);
-    void SetMessageStream(tNMEA0183Stream *stream, uint8_t _SourceID=0);
+    tNMEA0183(uint8_t _SourceID=0);
     bool Open();
     #ifdef ARDUINO
     // Begin is obsolete. Use Open(...)
@@ -69,16 +72,22 @@ class tNMEA0183
     // Call this in loop to read incoming messages or empty buffered sent messages.
     // For new messages message handler will be called.
     void ParseMessages();
+    void ParseMessage();
     // You can also read incoming messages with GetMessage. Function
     // returns true, when there is valid message.
     bool GetMessage(tNMEA0183Msg &NMEA0183Msg);
+    bool GetMessage(std::string &message);
     // Function will send message immediately of buffer it. Call ParseMessages()
     // in loop so that buffered messages will be sent.
     bool SendMessage(const tNMEA0183Msg &NMEA0183Msg);
+    bool SendMessage(const std::string &message);
+    bool SendMessageAndWaitAck(const std::string &message, const std::string &expectedAck, uint8_t iterations = 20);
 
     // These are obsolete. Use SendMessage
     bool SendMessage(const char *buf);
     void kick();
+
+    std::unique_ptr<tNMEA0183Stream> port;
 };
 
 #endif

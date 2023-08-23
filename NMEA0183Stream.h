@@ -29,6 +29,7 @@ I/O stream used in the NMEA2000 libraries.
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string>
 
 #ifdef ARDUINO
 // Arduino users get away with using the standard Stream class and its
@@ -43,13 +44,18 @@ class tNMEA0183Stream {
    public:
    virtual int available() { return 1; }
    virtual int availableForWrite() { return 1; }
+   virtual void setAvailable(bool value) { }
    // Returns first byte if incoming data, or -1 on no available data.
    virtual int read() = 0;
+
+   virtual std::string readline() = 0;
 
    // Write data to stream.
    virtual size_t write(const uint8_t* data, size_t size) = 0;
    // Write char to stream.
    virtual size_t write(const uint8_t &c) { return write(&c,1); };
+
+   virtual size_t write(std::string s) { return write((const uint8_t *)s.c_str(), s.size());};
 
    // Print string to stream.
    size_t print(const char* str);
