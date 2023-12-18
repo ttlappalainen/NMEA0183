@@ -12,7 +12,7 @@
 #if defined(USE_SOFTWARE_SERIAL)
 #include <SoftwareSerial.h>
 
-SoftwareSerial NMEA0183Port(0, 1, false);
+SoftwareSerial NMEA0183Port(NMEA0183_RX_PIN, NMEA0183_TX_PIN, false);
 #else
 HardwareSerial &NMEA0183Port=Serial1;
 #endif
