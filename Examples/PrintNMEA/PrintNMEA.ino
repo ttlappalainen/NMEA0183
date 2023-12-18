@@ -4,7 +4,7 @@
 #include <NMEA0183Messages.h>
 
 // Uncomment below to use SoftwareSerial for NMEA0183 port instead of hw. This works e.g., with Arduino Uno
-#define USE_SOFTWARE_SERIAL 1
+// #define USE_SOFTWARE_SERIAL 1
 // If you use SoftwareSerial, define NMEA0183 port Rx/Tx pins below
 #define NMEA0183_RX_PIN 0
 #define NMEA0183_TX_PIN 1
