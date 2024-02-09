@@ -1,7 +1,7 @@
 /*
 NMEA0183Messages.cpp
 
-Copyright (c) 2015-2023 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2024 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -829,13 +829,13 @@ bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisM
 	return true; 
 }
 	  
-bool NMEA0183ParseGSV(const tNMEA0183Msg &NMEA0183Msg, int &totalMSG, int &thisMSG, int &SatelliteCount,
+bool NMEA0183ParseGSV_nc(const tNMEA0183Msg &NMEA0183Msg, int &totalMSG, int &thisMSG, int &SatelliteCount,
                         struct tGSV &Msg1,
                         struct tGSV &Msg2,
                         struct tGSV &Msg3,
                         struct tGSV &Msg4)
 {
-  bool result = ( NMEA0183Msg.FieldCount() >= 19);
+  bool result = ( NMEA0183Msg.FieldCount() >= 7);
 
   if(result) {
     totalMSG = atoi(NMEA0183Msg.Field(0));

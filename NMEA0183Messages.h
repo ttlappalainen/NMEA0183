@@ -1,7 +1,7 @@
 /*
 NMEA0183Messages.h
 
-Copyright (c) 2015-2023 Timo Lappalainen, Kave Oy, www.kave.fi
+Copyright (c) 2015-2024 Timo Lappalainen, Kave Oy, www.kave.fi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -494,11 +494,22 @@ bool NMEA0183SetGSV(tNMEA0183Msg &NMEA0183Msg, uint32_t totalMSG, uint32_t thisM
 					uint32_t PRN4, uint32_t Elevation4, uint32_t Azimuth4, uint32_t SNR4,
 					const char *Src="GP");
 
-bool NMEA0183ParseGSV(const tNMEA0183Msg &NMEA0183Msg, int &totalMSG, int &thisMSG, int &SatelliteCount,
+bool NMEA0183ParseGSV_nc(const tNMEA0183Msg &NMEA0183Msg, int &totalMSG, int &thisMSG, int &SatelliteCount,
                         struct tGSV &Msg1,
                         struct tGSV &Msg2,
                         struct tGSV &Msg3,
                         struct tGSV &Msg4);
+                        
+inline bool NMEA0183ParseGSV(const tNMEA0183Msg &NMEA0183Msg, int &totalMSG, int &thisMSG, int &SatelliteCount,
+                        struct tGSV &Msg1,
+                        struct tGSV &Msg2,
+                        struct tGSV &Msg3,
+                        struct tGSV &Msg4) {
+  return (NMEA0183Msg.IsMessageCode("GSV")
+            ?NMEA0183ParseGSV_nc(NMEA0183Msg,totalMSG,thisMSG,SatelliteCount,
+                                 Msg1,Msg2,Msg3,Msg4)
+            :false);
+}                         
 
 //*****************************************************************************
 // ZDA - Time & Date
