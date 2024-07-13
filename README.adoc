@@ -32,6 +32,10 @@ Note also that paths are version depended and here 1.6.11.
 
 == Changes ==
 
+13.07.2024
+
+- Changed tNMEA0183Msg::AddLatitudeField and tNMEA0183Msg::AddLongitudeField to add leading zeros as default.
+
 09.02.2024
 
 - Changed GSV parsing to accept at minimun just one satellite without rest fields.
