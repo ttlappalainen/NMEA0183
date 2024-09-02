@@ -539,5 +539,14 @@ inline bool NMEA0183ParseAPB(const tNMEA0183Msg &NMEA0183Msg, tAPB &apb) {
 // $PASHR,163029.000,158.09,T,-0.30,+0.31,+0.01,0.029,0.029,0.059,1,1*3B
 bool NMEA0183SetSHR(tNMEA0183Msg& NMEA0183Msg, double GPSTime, const double HeadingRad, const double RollRad, const double PitchRad, double HeaveM, double RollAccuracyRad, double PitchAccuracyRad, double HeadingAccuracyRad, int GPSQualityIndicator, int INSStatusFlag, const char* Source);
 
+//*****************************************************************************
+// MTW
+bool NMEA0183ParseMTW_nc(const tNMEA0183Msg &NMEA0183Msg, double &Watertemp);
+
+inline bool NMEA0183ParseMTW(const tNMEA0183Msg &NMEA0183Msg, double &Watertemp) {
+  return NMEA0183ParseMTW_nc(NMEA0183Msg, Watertemp);
+}
+
+bool NMEA0183SetMTW(tNMEA0183Msg &NMEA0183Msg, double WaterTemp, const char *Src="VW");
 
 #endif

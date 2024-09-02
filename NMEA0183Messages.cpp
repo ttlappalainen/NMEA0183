@@ -979,3 +979,22 @@ bool NMEA0183SetSHR(tNMEA0183Msg& NMEA0183Msg, double GPSTime, const double Head
   if (!NMEA0183Msg.AddUInt32Field(INSStatusFlag)) return false;
   return true;
 }
+
+//*****************************************************************************
+// $GPMTW,11.2,C*24
+bool NMEA0183ParseMTW_nc(const tNMEA0183Msg &NMEA0183Msg, double &Watertemp)
+{
+  bool result=( NMEA0183Msg.FieldCount()>=2 );
+
+  if ( result )
+    Watertemp=atof(NMEA0183Msg.Field(0));
+
+  return result;
+}
+
+bool NMEA0183SetMTW(tNMEA0183Msg &NMEA0183Msg, double WaterTemp, const char *Src) {
+  if ( !NMEA0183Msg.Init("MTW",Src)) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WaterTemp)) return false;
+  if ( !NMEA0183Msg.AddStrField("C")) return false;
+  return true;
+}
