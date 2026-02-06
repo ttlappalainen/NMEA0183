@@ -480,7 +480,9 @@ unsigned long tNMEA0183Msg::DaysToNMEA0183Date(unsigned long val) {
     time_t t=val*86400;
     #endif
     breakTime(t, tm);
-    val=(unsigned long)GetDay(tm)*10000+(unsigned long)GetMonth(tm)*100+((unsigned long)GetYear(tm)-2000);
+    int dy = GetYear(tm);
+    dy -= (dy >= 2000) ? 2000 : 1900;
+    val=(unsigned long)GetDay(tm)*10000+(unsigned long)GetMonth(tm)*100+dy;
   }
 
   return val;
