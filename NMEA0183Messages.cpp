@@ -31,8 +31,8 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 const double pi=3.1415926535897932384626433832795;
 const double kmhToms=1000.0/3600.0;
 const double knToms=1852.0/3600.0;
-const double degToRad=pi/180.0;
-const double radToDeg=180.0/pi;
+const double degToRad=pi/180.0L;
+const double radToDeg=180.0L/pi;
 const double msTokmh=3600.0/1000.0;
 const double msTokn=3600.0/1852.0;
 const double nmTom=1.852*1000;
@@ -89,7 +89,7 @@ double LatLonToDouble(const char *data, const char sign) {
   if ( val!=NMEA0183DoubleNA ) {
     double deg=floor(val/100);
 
-    val=deg+(val-deg*100.0)/60.0;
+    val=deg+(val-deg*100.0L)/60.0L;
     if ( sign=='S' || sign=='W' ) val=-val;
   }
 
@@ -104,7 +104,7 @@ double NMEA0183GPTimeToSeconds(const char *data) {
     double hh=floor(val/10000);
     double mm=floor((val-hh*10000)/100);
 
-    val=hh*3600+mm*60+(val-hh*10000.0-mm*100);
+    val=hh*3600+mm*60+(val-hh*10000.0L-mm*100);
   }
 
   return val;
@@ -520,7 +520,7 @@ bool NMEA0183BuildVTG(char* msg, const char Src[], double TrueCOG, double Magnet
     strcat(msg,scratch);
   }
   strcat(msg,",M,");
-  if (SOG >= 0.00) {
+  if (SOG >= 0.00L) {
      sprintfDouble2(scratch, SOG*msTokn);
      strcat(msg, scratch);
      strcat(msg,",N,,K");
