@@ -549,4 +549,10 @@ inline bool NMEA0183ParseMTW(const tNMEA0183Msg &NMEA0183Msg, double &Watertemp)
 
 bool NMEA0183SetMTW(tNMEA0183Msg &NMEA0183Msg, double WaterTemp, const char *Src="VW");
 
+//*****************************************************************************
+// VLW
+bool NMEA0183ParseVLW(const tNMEA0183Msg &NMEA0183Msg, double &Log, double &TripLog);
+
+bool NMEA0183SetVLW(tNMEA0183Msg &NMEA0183Msg, double Log, double TripLog, const char *Src="II");
+
 #endif

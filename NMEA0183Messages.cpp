@@ -998,3 +998,32 @@ bool NMEA0183SetMTW(tNMEA0183Msg &NMEA0183Msg, double WaterTemp, const char *Src
   if ( !NMEA0183Msg.AddStrField("C")) return false;
   return true;
 }
+
+//*****************************************************************************
+// $xxVLW,xxxx.x,N,yyyy.y,N*CC
+// $xxVLW,DATA_TOTAL_WATER_DISTANCE_NM,N,
+//    DATA_TRIP_WATER_DISTANCE_NM,N,
+//    DATA_TOTAL_GROUND_DISTANCE_NM,N,
+//    DATA_TRIP_GROUND_DISTANCE_NM,N
+//    *hh<0D><0A>
+bool NMEA0183ParseVLW(const tNMEA0183Msg &NMEA0183Msg, double &Log, double &TripLog) {
+  if ( NMEA0183Msg.FieldCount()<4 ||
+       strcmp(NMEA0183Msg.Field(1),"N")!=0 ||
+       strcmp(NMEA0183Msg.Field(3),"N")!=0 ) {
+    return false;
+  }
+
+  Log=NMEA0183GetDouble(NMEA0183Msg.Field(0));
+  TripLog=NMEA0183GetDouble(NMEA0183Msg.Field(2));
+  // We ignore the total and trip ground distance fields (if they're present), as they are not generally used
+  return true;
+}
+
+bool NMEA0183SetVLW(tNMEA0183Msg &NMEA0183Msg, double Log, double TripLog, const char *Src) {
+  if ( !NMEA0183Msg.Init("VLW",Src)) return false;
+  if ( !NMEA0183Msg.AddDoubleField(Log)) return false;
+  if ( !NMEA0183Msg.AddStrField("N")) return false;             // Log in nautical miles
+  if ( !NMEA0183Msg.AddDoubleField(TripLog)) return false;
+  if ( !NMEA0183Msg.AddStrField("N")) return false;             // Trip log in nautical miles
+  return true;
+}
