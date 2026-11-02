@@ -36,9 +36,11 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // Teensy 3.2, 3.5, 3.6
 // Arduino Mega
 // Linux
+// RP2040/RP2350/Pico/Pico W compiled with the Pico SDK
 #if !( defined(__MK20DX256__)||defined(__ATMEGA32U4__) || defined(__MK64FX512__) || defined (__MK66FX1M0__) \
        || defined(__SAM3X8E__) \
        || defined(__linux__)||defined(__linux)||defined(linux) \
+       || defined(PICO_BOARD) \
      )
 #define NO_PRINTF_DOUBLE_SUPPORT
 #endif
