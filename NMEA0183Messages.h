@@ -549,4 +549,14 @@ inline bool NMEA0183ParseMTW(const tNMEA0183Msg &NMEA0183Msg, double &Watertemp)
 
 bool NMEA0183SetMTW(tNMEA0183Msg &NMEA0183Msg, double WaterTemp, const char *Src="VW");
 
+//*****************************************************************************
+// VWR
+bool NMEA0183ParseVWR_nc(const tNMEA0183Msg &NMEA0183Msg, double &WindAngle, double &WindSpeed);
+
+inline bool NMEA0183ParseVWR(const tNMEA0183Msg &NMEA0183Msg, double &WindAngle, double &WindSpeed) {
+  return NMEA0183ParseVWR_nc(NMEA0183Msg, WindAngle, WindSpeed);
+}
+
+bool NMEA0183SetVWR(tNMEA0183Msg &NMEA0183Msg, double WindAngle, double WindSpeed, const char *Src="II");
+
 #endif

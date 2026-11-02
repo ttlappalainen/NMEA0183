@@ -998,3 +998,45 @@ bool NMEA0183SetMTW(tNMEA0183Msg &NMEA0183Msg, double WaterTemp, const char *Src
   if ( !NMEA0183Msg.AddStrField("C")) return false;
   return true;
 }
+
+//*****************************************************************************
+// $IIVWR,45.0,L,5.1,N,2.62,M,9.45,K*hh
+// Returns WindAngle in degree (0 = Headwind) and WindSpeed in m/s
+bool NMEA0183ParseVWR_nc(const tNMEA0183Msg &NMEA0183Msg, double &WindAngle, double &WindSpeed)
+{
+  WindAngle = NMEA0183DoubleNA;
+  WindSpeed = NMEA0183DoubleNA;
+  bool result=( NMEA0183Msg.FieldCount()>=8 && NMEA0183Msg.FieldLen(0)>=1 );
+  
+  if ( result ){
+    WindAngle = atof(NMEA0183Msg.Field(0));
+	if ( NMEA0183Msg.Field(1)[0] == 'L' && WindAngle < 180 )
+      WindAngle = 360 - WindAngle;
+	
+    if ( NMEA0183Msg.FieldLen(4) > 0 && NMEA0183Msg.Field(5)[0] == 'M' )
+      WindSpeed = atof(NMEA0183Msg.Field(4));
+    else if ( NMEA0183Msg.FieldLen(2) > 0 && NMEA0183Msg.Field(3)[0] == 'N' )
+      WindSpeed = atof(NMEA0183Msg.Field(2)) * knToms;
+    else if ( NMEA0183Msg.FieldLen(6) > 0 && NMEA0183Msg.Field(7)[0] == 'K' )
+      WindSpeed = atof(NMEA0183Msg.Field(6)) * 1000.0 / 3600.0;
+  }
+  return result;
+}
+
+bool NMEA0183SetVWR(tNMEA0183Msg &NMEA0183Msg, double WindAngle, double WindSpeed, const char *Src) {
+  if ( !NMEA0183Msg.Init("VWR",Src) ) return false;
+  char WindDir = 'R';
+  if ( WindAngle > 180.0 ){
+    WindAngle = 360.0 - WindAngle;
+	WindDir = 'L';
+  }
+  if ( !NMEA0183Msg.AddDoubleField(WindAngle) ) return false;
+  if ( !NMEA0183Msg.AddStrField(WindDir) ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WindSpeed) ) return false;
+  if ( !NMEA0183Msg.AddStrField('N') ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WindSpeed) ) return false;
+  if ( !NMEA0183Msg.AddStrField('M') ) return false;
+  if ( !NMEA0183Msg.AddDoubleField(WindSpeed) ) return false;
+  if ( !NMEA0183Msg.AddStrField('K') ) return false;
+  return true;
+}
