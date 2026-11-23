@@ -207,6 +207,7 @@ struct tAPB {
 	char botwMode; //M = Magnetic, T = True
 	char headingToSteerMode; //M = Magnetic, T = True
     char destID[NMEA0183_MAX_WP_NAME_LENGTH];
+    char mode; // Optional mode indicator, or '\0' if absent
 };
 
 enum tNMEA0183WindReference {
