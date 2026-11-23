@@ -73,3 +73,24 @@ TEST_CASE("ZDA")
     CHECK(NMEA0183SetZDA(dst, GPSTime, GPSDay, GPSMonth, GPSYear, LZD, LZMD));
   });
 }
+
+TEST_CASE("APB optional mode and unavailable values")
+{
+  tNMEA0183Msg src;
+  tAPB apb;
+  const char* fields[] = {"A", "A", "", "R", "N", "V", "V",
+                          "", "T", "WP", "", "T", "", "T"};
+  REQUIRE(src.Init("APB", "GP"));
+  for (const char* field : fields) REQUIRE(src.AddStrField(field));
+  apb.mode = 'D';
+  REQUIRE(NMEA0183ParseAPB_nc(src, apb));
+  CHECK(apb.mode == '\0');
+  CHECK(NMEA0183IsNA(apb.xte));
+  CHECK(NMEA0183IsNA(apb.botw));
+  CHECK(NMEA0183IsNA(apb.btw));
+  CHECK(NMEA0183IsNA(apb.headingToSteer));
+
+  REQUIRE(src.AddStrField("D"));
+  REQUIRE(NMEA0183ParseAPB_nc(src, apb));
+  CHECK(apb.mode == 'D');
+}
